@@ -1,4 +1,4 @@
-import { Geist, Geist_Mono } from "next/font/google";
+﻿import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,8 +12,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "Hooperzclub | Organize & Join Basketball Leagues",
-  description: "The ultimate platform for basketball enthusiasts to manage tournaments, pick-up games, and live player statistics.",
+  title: "Hooperzclub | Organize & Join Sports Leagues",
+  description: "The ultimate platform for multi-sport organizers, athletes, and fans to manage events, leagues, and teams.",
 };
 
 export default function RootLayout({ children }) {
