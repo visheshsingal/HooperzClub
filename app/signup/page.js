@@ -42,7 +42,7 @@ export default function SignupPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1509223197845-458d87318791?auto=format&fit=crop&w=1200&q=80)' }}>
+        <div className="relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(https://images.pexels.com/photos/6777243/pexels-photo-6777243.jpeg' }}>
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 flex h-full flex-col justify-center p-10 text-white">
             <span className="text-sm uppercase tracking-[0.3em] text-red-300/70">Hooperzclub</span>

@@ -26,10 +26,17 @@ export async function POST(request) {
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
+      credits: 99,
+      blocked: false,
       createdAt: new Date(),
     });
 
-    const token = signToken({ userId: user.insertedId.toString(), email: email.toLowerCase(), name });
+    const token = signToken({
+      userId: user.insertedId.toString(),
+      email: email.toLowerCase(),
+      name,
+      credits: 99,
+    });
 
     return new Response(JSON.stringify({ token }), {
       status: 201,

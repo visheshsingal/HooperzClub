@@ -1,0 +1,277 @@
+'use client';
+
+import { createContext, useContext, useEffect, useState } from 'react';
+
+const DashboardContext = createContext(null);
+const apiBase = '/api/dashboard';
+
+export function DashboardProvider({ children, user }) {
+  const [events, setEvents] = useState([]);
+  const [registeredTeams, setRegisteredTeams] = useState([]);
+  const [joinedEvents, setJoinedEvents] = useState([]);
+  const [currentUser, setCurrentUser] = useState(user || null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [eventsRes, teamsRes, joinedRes] = await Promise.all([
+          fetch(`${apiBase}/events`),
+          fetch(`${apiBase}/teams`),
+          fetch(`${apiBase}/joined`),
+        ]);
+
+        if (!eventsRes.ok || !teamsRes.ok || !joinedRes.ok) {
+          throw new Error('Failed to load dashboard data');
+        }
+
+        const [loadedEvents, loadedTeams, loadedJoined] = await Promise.all([
+          eventsRes.json(),
+          teamsRes.json(),
+          joinedRes.json(),
+        ]);
+
+        setEvents(loadedEvents);
+        setRegisteredTeams(loadedTeams);
+        setJoinedEvents(loadedJoined);
+      } catch (error) {
+        console.error('Unable to load dashboard data:', error);
+      }
+    };
+
+    loadData();
+  }, []);
+
+  const adjustCredits = async (amount) => {
+    if (!currentUser?.userId) {
+      throw new Error('Unable to confirm user.');
+    }
+
+    const token = window.localStorage.getItem('hooperz_token');
+    const response = await fetch(`${apiBase}/credits`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ amount }),
+    });
+
+    if (!response.ok) {
+      const body = await response.json();
+      throw new Error(body.error || 'Unable to adjust credits.');
+    }
+
+    const updatedUser = await response.json();
+    setCurrentUser(updatedUser);
+    return updatedUser;
+  };
+
+  const buyCredits = async (amount) => {
+    if (amount <= 0) {
+      throw new Error('Enter a valid credit amount.');
+    }
+    return adjustCredits(amount);
+  };
+
+  const spendCredits = async (amount) => {
+    if (amount <= 0) {
+      throw new Error('Enter a valid credit amount to spend.');
+    }
+    return adjustCredits(-amount);
+  };
+
+  const addEvent = async (event) => {
+    if (!currentUser?.credits || currentUser.credits < 1) {
+      throw new Error('You need at least 1 credit to create an event.');
+    }
+
+    await spendCredits(1);
+
+    const enrichedEvent = {
+      ...event,
+      fixtures: event.fixtures ?? [],
+      createdBy: currentUser?.name || 'Organizer',
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const response = await fetch(`${apiBase}/events`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(enrichedEvent),
+      });
+
+      if (!response.ok) {
+        throw new Error('Unable to save event.');
+      }
+
+      const savedEvent = await response.json();
+      setEvents((prev) => [savedEvent, ...prev]);
+    } catch (error) {
+      await adjustCredits(1);
+      throw error;
+    }
+  };
+
+  const registerTeam = async (team) => {
+    const response = await fetch(`${apiBase}/teams`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(team),
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to save team.');
+    }
+
+    const savedTeam = await response.json();
+    setRegisteredTeams((prev) => [savedTeam, ...prev]);
+  };
+
+  const updateTeam = async (team) => {
+    const response = await fetch(`${apiBase}/teams`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(team),
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to update team.');
+    }
+
+    const updatedTeam = await response.json();
+    setRegisteredTeams((prev) => prev.map((existing) => (existing._id === updatedTeam._id ? updatedTeam : existing)));
+  };
+
+  const deleteTeam = async (teamId) => {
+    const response = await fetch(`${apiBase}/teams?teamId=${encodeURIComponent(teamId)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to delete team.');
+    }
+
+    setRegisteredTeams((prev) => prev.filter((team) => team._id !== teamId));
+  };
+
+  const deleteEvent = async (eventId) => {
+    const response = await fetch(`${apiBase}/events?eventId=${encodeURIComponent(eventId)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to delete event.');
+    }
+
+    setEvents((prev) => prev.filter((event) => event.id !== eventId));
+    setJoinedEvents((prev) => prev.filter((joined) => joined.eventId !== eventId));
+  };
+
+  const joinEvent = async (eventId, team) => {
+    const response = await fetch(`${apiBase}/joined`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ eventId, teamId: team._id, teamName: team.name, teamSport: team.sport }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to join event.');
+    }
+
+    const savedJoin = await response.json();
+    setJoinedEvents((prev) => [savedJoin, ...prev]);
+  };
+
+  const discardJoin = async (eventId) => {
+    const response = await fetch(`${apiBase}/joined?eventId=${encodeURIComponent(eventId)}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error('Unable to discard join.');
+    }
+
+    setJoinedEvents((prev) => {
+      const index = prev.map((joined) => joined.eventId).lastIndexOf(eventId);
+      if (index === -1) return prev;
+      return [...prev.slice(0, index), ...prev.slice(index + 1)];
+    });
+  };
+
+  const addJoinedEvent = (joined) => {
+    setJoinedEvents((prev) => [joined, ...prev]);
+  };
+
+  const generateFixtures = (eventId, format, count, teamNames) => {
+    const activeTeams = teamNames.length > 0 ? teamNames.slice(0, count) : Array.from({ length: count }, (_, idx) => `Team ${idx + 1}`);
+    const generated = [];
+
+    if (format === 'Knockout') {
+      for (let i = 0; i < Math.floor(activeTeams.length / 2); i += 1) {
+        generated.push(`Match ${i + 1}: ${activeTeams[i]} vs ${activeTeams[activeTeams.length - 1 - i]}`);
+      }
+    } else if (format === 'League') {
+      let index = 1;
+      for (let i = 0; i < activeTeams.length; i += 1) {
+        for (let j = i + 1; j < activeTeams.length; j += 1) {
+          generated.push(`Match ${index}: ${activeTeams[i]} vs ${activeTeams[j]}`);
+          index += 1;
+        }
+      }
+    } else if (format === 'Round Robin') {
+      let round = 1;
+      for (let i = 0; i < activeTeams.length; i += 1) {
+        for (let j = i + 1; j < activeTeams.length; j += 1) {
+          generated.push(`Round ${round}: ${activeTeams[i]} vs ${activeTeams[j]}`);
+          round += 1;
+        }
+      }
+    } else {
+      generated.push('Group + Knockout will create brackets once teams are confirmed.');
+    }
+
+    if (eventId) {
+      setEvents((prevEvents) =>
+        prevEvents.map((event) =>
+          event.id === eventId ? { ...event, fixtures: generated } : event
+        )
+      );
+    }
+
+    return generated;
+  };
+
+  return (
+    <DashboardContext.Provider
+      value={{
+        events,
+        registeredTeams,
+        joinedEvents,
+        addEvent,
+        registerTeam,
+        updateTeam,
+        deleteTeam,
+        joinEvent,
+        addJoinedEvent,
+        deleteEvent,
+        discardJoin,
+        generateFixtures,
+        currentUser,
+        buyCredits,
+        spendCredits,
+        adjustCredits,
+      }}
+    >
+      {children}
+    </DashboardContext.Provider>
+  );
+}
+
+export function useDashboard() {
+  const context = useContext(DashboardContext);
+  if (!context) {
+    throw new Error('useDashboard must be used within DashboardProvider');
+  }
+  return context;
+}

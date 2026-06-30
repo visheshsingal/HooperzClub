@@ -10,9 +10,31 @@ export default function LoginPage() {
 
   useEffect(() => {
     const token = localStorage.getItem('hooperz_token');
-    if (token) {
-      router.replace('/dashboard');
-    }
+    if (!token) return;
+
+    const verifyToken = async () => {
+      const response = await fetch('/api/auth/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      if (!response.ok) {
+        localStorage.removeItem('hooperz_token');
+        return;
+      }
+
+      const body = await response.json();
+      if (body.valid && body.user?.admin) {
+        router.replace('/admin');
+      } else if (body.valid) {
+        router.replace('/dashboard');
+      } else {
+        localStorage.removeItem('hooperz_token');
+      }
+    };
+
+    verifyToken();
   }, [router]);
 
   const handleLogin = async (data) => {
@@ -36,13 +58,17 @@ export default function LoginPage() {
     }
 
     localStorage.setItem('hooperz_token', body.token);
-    router.push('/dashboard');
+    if (body.admin) {
+      router.push('/admin');
+    } else {
+      router.push('/dashboard');
+    }
   };
 
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="grid min-h-screen grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=1200&q=80)' }}>
+        <div className="relative overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(https://images.pexels.com/photos/37963478/pexels-photo-37963478.jpeg)' }}>
           <div className="absolute inset-0 bg-black/60" />
           <div className="relative z-10 flex h-full flex-col justify-center p-10 text-white">
             <span className="text-sm uppercase tracking-[0.3em] text-red-300/70">Hooperzclub</span>
