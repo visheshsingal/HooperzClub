@@ -19,7 +19,7 @@ export default function AboutUs() {
     resizeCanvas();
     window.addEventListener('resize', resizeCanvas);
 
-    const sportsTypes = ['basketball', 'soccer', 'volleyball', 'tennis'];
+    const sportsTypes = ['basketball', 'football', 'Badminton'];
     const orbs = [];
     const orbitCount = 6;
 
@@ -51,9 +51,8 @@ export default function AboutUs() {
 
         const colorMap = {
           basketball: ['#22d3ee', '#38bdf8'],
-          soccer: ['#818cf8', '#a5b4fc'],
-          volleyball: ['#34d399', '#6ee7b7'],
-          tennis: ['#facc15', '#fde68a'],
+          football: ['#818cf8', '#a5b4fc'],
+          Badminton: ['#facc15', '#fde68a'],
         };
 
         const [startColor, endColor] = colorMap[this.type];
@@ -88,7 +87,7 @@ export default function AboutUs() {
           ctx.beginPath();
           ctx.arc(0, 0, this.radius * 0.7, Math.PI / 1.5, Math.PI * 1.5);
           ctx.stroke();
-        } else if (this.type === 'soccer') {
+        } else if (this.type === 'football') {
           for (let angle = 0; angle < Math.PI * 2; angle += Math.PI / 3) {
             ctx.beginPath();
             ctx.moveTo(0, 0);
@@ -106,17 +105,7 @@ export default function AboutUs() {
           ctx.lineTo(-patch * 0.25, patch * 0.65);
           ctx.closePath();
           ctx.fill();
-        } else if (this.type === 'volleyball') {
-          ctx.beginPath();
-          ctx.arc(0, 0, this.radius * 0.9, -Math.PI / 4, Math.PI / 3);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(0, 0, this.radius * 0.9, Math.PI / 4, Math.PI * 1.2);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.arc(0, 0, this.radius * 0.5, -Math.PI / 2, Math.PI / 2);
-          ctx.stroke();
-        } else if (this.type === 'tennis') {
+        } else if (this.type === 'Badminton') {
           ctx.beginPath();
           ctx.arc(-this.radius * 0.3, 0, this.radius * 0.65, Math.PI / 5, Math.PI * 1.2);
           ctx.stroke();
@@ -202,7 +191,7 @@ export default function AboutUs() {
             </div>
             <h3 className="mt-6 text-lg font-semibold tracking-tight text-white">Launch leagues</h3>
             <p className="mt-3 text-sm leading-relaxed text-slate-300">
-              Set up schedules, team groups, and rules for competitions across basketball, soccer, volleyball, and more.
+              Set up schedules, team groups, and rules for competitions across football, basketball, and badminton.
             </p>
           </div>
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Button } from '../../../components/dashboard/ui';
 
 export default function EventPayment({ event, team, onSuccess, onError }) {
   const [processing, setProcessing] = useState(false);
@@ -26,7 +27,7 @@ export default function EventPayment({ event, team, onSuccess, onError }) {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.amount,
         currency: orderData.currency,
-        name: 'Hooperzclub',
+        name: 'Hooperz Club',
         description: `Registration fee for ${event.name}`,
         order_id: orderData.id,
         handler: async function (response) {
@@ -53,21 +54,12 @@ export default function EventPayment({ event, team, onSuccess, onError }) {
           name: team.name,
         },
         theme: {
-          color: '#7f2b2b',
+          color: '#E50914',
         },
       };
 
-      const script = document.createElement('script');
-      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-      script.onload = () => {
-        // @ts-ignore
-        const rzp = new window.Razorpay(options);
-        rzp.open();
-      };
-      script.onerror = () => {
-        throw new Error('Unable to load Razorpay checkout.');
-      };
-      document.body.appendChild(script);
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (err) {
       setError(err.message || 'Unable to complete payment.');
       onError(err);
@@ -85,17 +77,20 @@ export default function EventPayment({ event, team, onSuccess, onError }) {
   }, []);
 
   return (
-    <div className="mt-4 space-y-3 rounded-2xl border border-white/10 bg-[#0f0f0f] p-4">
-      <p className="text-sm text-slate-300">This event requires a registration fee of ₹{event.fee}.</p>
-      <button
-        type="button"
+    <div className="rounded-lg border border-red-500/20 bg-red-600/5 p-4">
+      <p className="text-sm text-zinc-300">
+        Registration fee: <span className="font-bold text-white">₹{event.fee}</span> for squad{' '}
+        <span className="font-semibold text-red-400">{team.name}</span>
+      </p>
+      <Button
+        variant="primary"
+        className="mt-3"
         onClick={openRazorpayCheckout}
         disabled={processing}
-        className="rounded-full bg-[#7f2b2b] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#8e2a2a] disabled:cursor-not-allowed disabled:bg-slate-600"
       >
-        {processing ? 'Processing…' : 'Pay with Razorpay'}
-      </button>
-      {error ? <p className="text-sm text-red-300">{error}</p> : null}
+        {processing ? 'Processing…' : `Pay ₹${event.fee} with Razorpay`}
+      </Button>
+      {error ? <p className="mt-2 text-sm text-red-400">{error}</p> : null}
     </div>
   );
 }

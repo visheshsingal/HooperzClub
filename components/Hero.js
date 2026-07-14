@@ -1,6 +1,6 @@
 ﻿'use client';
 
-const sports = ['Basketball', 'Football', 'Tennis'];
+const sports = ['Basketball', 'Football', 'Badminton'];
 
 export default function Hero() {
   return (

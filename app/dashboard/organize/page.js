@@ -2,11 +2,23 @@
 
 import { useMemo, useState } from 'react';
 import { useDashboard } from '../dashboard-context';
+import {
+  PageHeader,
+  Card,
+  Button,
+  Input,
+  Select,
+  Textarea,
+  Badge,
+  Toast,
+  SectionTitle,
+} from '../../../components/dashboard/ui';
 
 const formats = ['Knockout', 'League', 'Round Robin', 'Group + Knockout'];
 
 export default function OrganizePage() {
-  const { registeredTeams, addEvent, generateFixtures } = useDashboard();
+  const { registeredTeams, addEvent, generateFixtures, currentUser } = useDashboard();
+  const [step, setStep] = useState(1);
   const [createData, setCreateData] = useState({
     name: '',
     sport: 'Football',
@@ -19,8 +31,16 @@ export default function OrganizePage() {
     description: '',
   });
   const [fixtures, setFixtures] = useState([]);
+  const [toast, setToast] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const upcomingTeams = useMemo(() => registeredTeams.map((team) => team.name), [registeredTeams]);
+  const credits = currentUser?.credits ?? 0;
+
+  const showToast = (msg, type = 'success') => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(''), 4000);
+  };
 
   const handleCreateChange = (event) => {
     const { name, value } = event.target;
@@ -30,14 +50,20 @@ export default function OrganizePage() {
     }));
   };
 
-  const handleGenerateFixtures = (event) => {
-    event.preventDefault();
+  const handleGenerateFixtures = () => {
     const generated = generateFixtures(null, createData.fixtureType, createData.teamCount, upcomingTeams);
     setFixtures(generated);
+    setStep(2);
   };
 
-  const handleCreateTournament = (event) => {
+  const handleCreateTournament = async (event) => {
     event.preventDefault();
+    if (credits < 1) {
+      showToast('You need at least 1 credit. Buy credits first.', 'error');
+      return;
+    }
+
+    setSubmitting(true);
     const generatedFixtures = fixtures.length
       ? fixtures
       : generateFixtures(null, createData.fixtureType, createData.teamCount, upcomingTeams);
@@ -57,204 +83,247 @@ export default function OrganizePage() {
       fixtures: generatedFixtures,
     };
 
-    addEvent(newEvent);
-    console.log('That event has been published:', newEvent.name);
-    setCreateData({
-      name: '',
-      sport: 'Football',
-      fixtureType: 'Knockout',
-      fixtureTitle: '',
-      teamCount: 8,
-      start: '',
-      location: '',
-      fee: 0,
-      description: '',
-    });
-    setFixtures([]);
+    try {
+      await addEvent(newEvent);
+      showToast(`"${newEvent.name}" published successfully!`);
+      setCreateData({
+        name: '',
+        sport: 'Football',
+        fixtureType: 'Knockout',
+        fixtureTitle: '',
+        teamCount: 8,
+        start: '',
+        location: '',
+        fee: 0,
+        description: '',
+      });
+      setFixtures([]);
+      setStep(1);
+    } catch (error) {
+      showToast(error.message || 'Failed to publish event.', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <div className="space-y-8">
-      <section className="rounded-xl border border-white/10 bg-[#181818] p-8 shadow-2xl shadow-black/20">
-        <div>
-          <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Organize</p>
-          <h1 className="mt-3 text-3xl font-semibold text-white">Create events & manage fixtures</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300">Build your next tournament, then generate matchups automatically with the same organizer workflow.</p>
-          <div className="mt-4 rounded-2xl bg-[#0f0f0f] p-4 text-sm text-slate-300">
-            <p>Event creation costs 1 credit.</p>
-            <p className="mt-2 text-slate-400">If your credits reach 0, buy credits in the new Credits tab before organizing again.</p>
+      <PageHeader
+        label="Step 3"
+        title="Organize a tournament"
+        description="Create events and auto-generate match fixtures. Each event costs 1 credit."
+        action={
+          <div className="rounded-lg border border-white/10 bg-[#181818] px-4 py-2 text-center">
+            <p className="text-xs text-zinc-500">Your credits</p>
+            <p className="text-2xl font-bold text-red-500">{credits}</p>
           </div>
+        }
+      />
+
+      {credits < 1 && (
+        <div className="rounded-lg border border-red-500/30 bg-red-600/10 p-4 text-sm text-red-300">
+          You&apos;re out of credits.{' '}
+          <a href="/dashboard/credits" className="font-semibold underline hover:text-red-200">
+            Buy credits
+          </a>{' '}
+          to organize events.
         </div>
+      )}
 
-      </section>
+      {/* Step indicator */}
+      <div className="flex items-center gap-2">
+        {[1, 2].map((s) => (
+          <button
+            key={s}
+            type="button"
+            onClick={() => setStep(s)}
+            className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
+              step === s
+                ? 'bg-red-600 text-white'
+                : 'bg-[#181818] text-zinc-500 hover:text-white'
+            }`}
+          >
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-xs">
+              {s}
+            </span>
+            {s === 1 ? 'Event details' : 'Fixtures & publish'}
+          </button>
+        ))}
+      </div>
 
-      <section className="rounded-xl border border-white/10 bg-[#181818] p-8 shadow-2xl shadow-black/20">
-        <div>
-          <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Create events & manage fixtures</p>
-          <h2 className="mt-3 text-2xl font-semibold text-white">Launch a new tournament</h2>
-          <p className="mt-3 text-sm leading-relaxed text-slate-300">Add a tournament to your events list and generate fixtures from the same form.</p>
-        </div>
-
-        <form className="mt-8 space-y-6" onSubmit={handleCreateTournament}>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <label className="space-y-2 text-sm text-slate-300">
-              Tournament Name
-              <input
+      {step === 1 && (
+        <Card glow>
+          <SectionTitle title="Event details" />
+          <form
+            className="mt-6 space-y-5"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleGenerateFixtures();
+            }}
+          >
+            <div className="grid gap-5 lg:grid-cols-2">
+              <Input
+                label="Tournament name"
                 name="name"
                 value={createData.name}
                 onChange={handleCreateChange}
+                placeholder="Summer League 2026"
                 required
-                className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
               />
-            </label>
-            <label className="space-y-2 text-sm text-slate-300">
-              Sport Type
-              <select
-                name="sport"
-                value={createData.sport}
-                onChange={handleCreateChange}
-                className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
-              >
+              <Select label="Sport" name="sport" value={createData.sport} onChange={handleCreateChange}>
                 <option>Football</option>
                 <option>Basketball</option>
-                <option>Tennis</option>
-              </select>
-            </label>
-          </div>
+                <option>Badminton</option>
+              </Select>
+            </div>
 
-          <div className="grid gap-4 lg:grid-cols-3">
-            <label className="space-y-2 text-sm text-slate-300">
-              Fixture type
-              <select
+            <div className="grid gap-5 lg:grid-cols-3">
+              <Select
+                label="Fixture format"
                 name="fixtureType"
                 value={createData.fixtureType}
                 onChange={handleCreateChange}
-                className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
               >
                 {formats.map((format) => (
                   <option key={format}>{format}</option>
                 ))}
-              </select>
-            </label>
-            <label className="space-y-2 text-sm text-slate-300">
-              Fixture title
-              <input
+              </Select>
+              <Input
+                label="Fixture title"
                 name="fixtureTitle"
                 value={createData.fixtureTitle}
                 onChange={handleCreateChange}
-                placeholder="E.g. Quarterfinal Draw"
-                className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
+                placeholder="Quarterfinal Draw"
               />
-            </label>
-            <label className="space-y-2 text-sm text-slate-300">
-              Team count
-              <input
+              <Input
+                label="Team count"
                 name="teamCount"
                 type="number"
                 min="2"
                 value={createData.teamCount}
                 onChange={handleCreateChange}
-                className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
               />
-            </label>
-          </div>
-          <div className="grid gap-4 lg:grid-cols-2">
-            <label className="space-y-2 text-sm text-slate-300">
-              Location
-              <input
+            </div>
+
+            <div className="grid gap-5 lg:grid-cols-2">
+              <Input
+                label="Location"
                 name="location"
                 value={createData.location}
                 onChange={handleCreateChange}
+                placeholder="Mumbai, India"
                 required
-                className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
               />
-            </label>
-            <label className="space-y-2 text-sm text-slate-300">
-              Start Date
-              <input
+              <Input
+                label="Start date"
                 name="start"
                 type="date"
                 value={createData.start}
                 onChange={handleCreateChange}
-                className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
               />
-            </label>
-          </div>
+            </div>
 
-          <label className="space-y-2 text-sm text-slate-300">
-            Registration Fee
-            <input
-              name="fee"
-              type="number"
-              min="0"
-              value={createData.fee}
-              onChange={handleCreateChange}
-              className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
-            />
-          </label>
+            <div className="grid gap-5 lg:grid-cols-2">
+              <Input
+                label="Registration fee (₹)"
+                name="fee"
+                type="number"
+                min="0"
+                value={createData.fee}
+                onChange={handleCreateChange}
+              />
+              <div className="flex items-end">
+                <p className="text-xs text-zinc-500">Set to 0 for free events</p>
+              </div>
+            </div>
 
-          <label className="space-y-2 text-sm text-slate-300">
-            Description
-            <textarea
+            <Textarea
+              label="Description"
               name="description"
-              rows="4"
+              rows={3}
               value={createData.description}
               onChange={handleCreateChange}
-              className="w-full rounded-2xl border border-white/10 bg-[#141414] px-4 py-3 text-sm text-white outline-none focus:border-[#8e2a2a]"
+              placeholder="Tell players about your tournament..."
             />
-          </label>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              type="button"
-              onClick={handleGenerateFixtures}
-              className="inline-flex items-center justify-center rounded-xl bg-[#7f2b2b] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#8e2a2a]"
-            >
-              Generate fixture list
-            </button>
-            <button
-              type="submit"
-              className="inline-flex items-center justify-center rounded-xl bg-white/5 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              Publish event
-            </button>
-          </div>
-        </form>
+            <Button type="submit" variant="primary">
+              Next: Generate fixtures →
+            </Button>
+          </form>
+        </Card>
+      )}
 
-        <div className="mt-8 rounded-xl border border-white/10 bg-[#141414] p-8 shadow-2xl shadow-black/20">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-sm uppercase tracking-[0.35em] text-slate-400">Fixture preview</p>
-              <h2 className="mt-2 text-2xl font-semibold text-white">Generated schedule</h2>
+      {step === 2 && (
+        <div className="space-y-6">
+          <Card>
+            <div className="flex items-center justify-between">
+              <SectionTitle title="Fixture preview" />
+              <Badge variant="red">{createData.fixtureType}</Badge>
             </div>
-            <span className="rounded-full bg-white/5 px-3 py-1 text-xs uppercase tracking-[0.25em] text-slate-300">Live</span>
-          </div>
 
-          <div className="mt-6 space-y-3">
-            {fixtures.length === 0 ? (
-              <div className="rounded-2xl border border-white/10 bg-[#0f0f0f] p-5 text-sm text-slate-400">No fixtures generated yet. Use the button above to preview the schedule.</div>
-            ) : (
-              fixtures.map((fixture, index) => (
-                <div key={index} className="rounded-2xl border border-white/10 bg-[#141414] px-4 py-4 text-sm text-slate-200">{fixture}</div>
-              ))
-            )}
-          </div>
+            <div className="mt-6 space-y-2">
+              {fixtures.length === 0 ? (
+                <p className="text-sm text-zinc-500">No fixtures generated yet.</p>
+              ) : (
+                fixtures.map((fixture, index) => (
+                  <div
+                    key={index}
+                    className="rounded border border-white/5 bg-black/40 px-4 py-3 text-sm text-zinc-300"
+                  >
+                    {fixture}
+                  </div>
+                ))
+              )}
+            </div>
 
-          <div className="mt-8 rounded-2xl border border-white/10 bg-[#181818] p-5 text-sm text-slate-300">
-            <p className="font-semibold text-slate-200">Registered squads</p>
-            <p className="mt-2 text-sm leading-relaxed text-slate-300">{upcomingTeams.length} squad(s) available for fixtures.</p>
-            {upcomingTeams.length === 0 ? (
-              <p className="mt-4 text-sm text-slate-500">No squads registered yet. Placeholder teams will be used when generating fixtures.</p>
-            ) : (
-              <div className="mt-4 grid gap-2 text-sm text-slate-300">
-                {upcomingTeams.map((team) => (
-                  <span key={team} className="rounded-2xl bg-black/20 px-3 py-2">{team}</span>
-                ))}
+            {upcomingTeams.length > 0 && (
+              <div className="mt-6 rounded-lg border border-white/5 bg-[#181818] p-4">
+                <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
+                  Using your squads
+                </p>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {upcomingTeams.map((team) => (
+                    <Badge key={team}>{team}</Badge>
+                  ))}
+                </div>
               </div>
             )}
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Button variant="secondary" onClick={() => setStep(1)}>
+                ← Back
+              </Button>
+              <Button
+                variant="primary"
+                onClick={handleCreateTournament}
+                disabled={submitting || credits < 1}
+              >
+                {submitting ? 'Publishing…' : 'Publish event (1 credit)'}
+              </Button>
+            </div>
+          </Card>
+
+          <div className="rounded-lg border border-white/5 bg-[#181818] p-5">
+            <p className="text-sm font-semibold text-white">Event summary</p>
+            <div className="mt-3 grid gap-2 text-sm text-zinc-400 sm:grid-cols-2">
+              <span>Name: {createData.name}</span>
+              <span>Sport: {createData.sport}</span>
+              <span>Location: {createData.location}</span>
+              <span>Teams: {createData.teamCount}</span>
+              <span>Fee: {createData.fee > 0 ? `₹${createData.fee}` : 'Free'}</span>
+              <span>Date: {createData.start || 'TBD'}</span>
+            </div>
           </div>
         </div>
-      </section>
+      )}
+
+      {toast && (
+        <Toast
+          message={typeof toast === 'string' ? toast : toast.msg}
+          type={typeof toast === 'string' ? 'success' : toast.type}
+          onClose={() => setToast('')}
+        />
+      )}
     </div>
   );
 }

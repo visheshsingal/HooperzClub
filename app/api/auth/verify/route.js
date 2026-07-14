@@ -39,6 +39,15 @@ export async function POST(request) {
         name: user.name,
         credits: user.credits ?? 0,
         blocked: !!user.blocked,
+        profileCompleted: !!user.profileCompleted,
+        profile: user.profile || {
+          location: '',
+          sport: '',
+          bio: '',
+          whatsapp: '',
+          instagram: '',
+          telegram: '',
+        },
       },
     }), {
       status: 200,

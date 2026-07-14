@@ -12,6 +12,10 @@ export function DashboardProvider({ children, user }) {
   const [currentUser, setCurrentUser] = useState(user || null);
 
   useEffect(() => {
+    setCurrentUser(user || null);
+  }, [user]);
+
+  useEffect(() => {
     const loadData = async () => {
       try {
         const [eventsRes, teamsRes, joinedRes] = await Promise.all([
@@ -40,6 +44,10 @@ export function DashboardProvider({ children, user }) {
 
     loadData();
   }, []);
+
+  const updateCurrentUser = (updates) => {
+    setCurrentUser((prev) => (prev ? { ...prev, ...updates } : prev));
+  };
 
   const adjustCredits = async (amount) => {
     if (!currentUser?.userId) {
@@ -258,6 +266,7 @@ export function DashboardProvider({ children, user }) {
         discardJoin,
         generateFixtures,
         currentUser,
+        updateCurrentUser,
         buyCredits,
         spendCredits,
         adjustCredits,

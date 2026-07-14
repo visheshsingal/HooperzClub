@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
@@ -42,7 +42,7 @@ export default function Footer() {
             </div>
 
             <p className="max-w-xs text-xs font-light leading-relaxed text-slate-300">
-              Where every sport finds a league. Organize, join, and celebrate competition across basketball, soccer, volleyball, cricket, and tennis.
+              Where every sport finds a league. Organize, join, and celebrate competition across football, basketball, and badminton.
             </p>
 
             <div className="flex items-center gap-3 pt-2">

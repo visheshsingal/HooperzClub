@@ -28,6 +28,15 @@ export async function POST(request) {
       password: hashedPassword,
       credits: 99,
       blocked: false,
+      profileCompleted: false,
+      profile: {
+        location: '',
+        sport: '',
+        bio: '',
+        whatsapp: '',
+        instagram: '',
+        telegram: '',
+      },
       createdAt: new Date(),
     });
 
