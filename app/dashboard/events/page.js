@@ -14,21 +14,44 @@ import {
   Toast,
 } from '../../../components/dashboard/ui';
 
+function getPlayersPerTeam(format) {
+  if (format === '1v1') return 1;
+  if (format === '2v2') return 2;
+  if (format === '3v3') return 3;
+  if (format === '5v5') return 5;
+  return 3;
+}
+
+const BASKETBALL_POSITIONS = [
+  { value: 'Point Guard (PG)', label: 'Point Guard (PG) - Playmaker / Ball Handler' },
+  { value: 'Shooting Guard (SG)', label: 'Shooting Guard (SG) - Perimeter Shooter / Scorer' },
+  { value: 'Small Forward (SF)', label: 'Small Forward (SF) - Versatile Wing / Driver' },
+  { value: 'Power Forward (PF)', label: 'Power Forward (PF) - Post Scorer / Rebounder' },
+  { value: 'Center (C)', label: 'Center (C) - Interior Rim Protector / Anchor' },
+];
+
 export default function EventsPage() {
   const {
     events,
     joinedEvents,
     joinEvent,
     discardJoin,
+    currentUser,
   } = useDashboard();
+
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [registeringEvent, setRegisteringEvent] = useState(null);
+  const [position, setPosition] = useState('Point Guard (PG)');
+  const [playerName, setPlayerName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
   const [formatFilter, setFormatFilter] = useState('All');
   const [locationFilter, setLocationFilter] = useState('All');
   const [toast, setToast] = useState('');
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(''), 3500);
+    setTimeout(() => setToast(''), 4000);
   };
 
   const openEventDetails = (event) => {
@@ -39,16 +62,31 @@ export default function EventsPage() {
     setSelectedEvent(null);
   };
 
-  const isJoined = selectedEvent
-    ? joinedEvents.some((joined) => joined.eventId === selectedEvent.id)
-    : false;
+  const openRegisterModal = (event) => {
+    setRegisteringEvent(event);
+    setPlayerName(currentUser?.name || '');
+    setPosition('Point Guard (PG)');
+  };
 
-  const handleApply = async (eventId) => {
+  const closeRegisterModal = () => {
+    setRegisteringEvent(null);
+  };
+
+  const handleRegisterSubmit = async (e) => {
+    e.preventDefault();
+    if (!registeringEvent) return;
+
+    setSubmitting(true);
     try {
-      await joinEvent(eventId, null);
-      showToast('You are registered for this Basketball event!');
-    } catch {
-      showToast('Failed to register. Please try again.', 'error');
+      const result = await joinEvent(registeringEvent.id, position, playerName);
+      showToast(
+        `✓ Registered as ${position}! You have been assigned to ${result.assignedTeam || 'a squad'}.`
+      );
+      closeRegisterModal();
+    } catch (err) {
+      showToast(err.message || 'Failed to register.', 'error');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -75,7 +113,7 @@ export default function EventsPage() {
       <PageHeader
         label="Basketball Tournaments"
         title="Official Basketball Events & Fixtures"
-        description="Browse official Basketball tournaments, register your squad, and view live match brackets & fixtures."
+        description="Browse official Basketball tournaments, register your position, get randomly assigned to a squad, and view live match brackets."
         action={<Badge variant="red">Basketball Only</Badge>}
       />
 
@@ -116,6 +154,11 @@ export default function EventsPage() {
             <div className="grid gap-6 sm:grid-cols-2">
               {filteredEvents.map((event) => {
                 const joined = joinedEvents.some((j) => j.eventId === event.id);
+                const eventJoinedCount = joinedEvents.filter((j) => j.eventId === event.id).length;
+                const teamCount = Math.max(2, Number(event.teamCount || event.teams) || 4);
+                const playersPerTeam = getPlayersPerTeam(event.format || '3v3');
+                const maxCapacity = teamCount * playersPerTeam;
+                const isFull = eventJoinedCount >= maxCapacity;
 
                 return (
                   <article
@@ -134,6 +177,11 @@ export default function EventsPage() {
                               ✓ Registered
                             </span>
                           )}
+                          {isFull && !joined && (
+                            <span className="rounded-full bg-red-100 px-3 py-1 text-[10px] font-bold text-red-700 uppercase tracking-wider">
+                              FULL / Closed
+                            </span>
+                          )}
                           <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold text-zinc-700">
                             {event.fee > 0 ? `$${event.fee}` : 'Free Entry'}
                           </span>
@@ -144,33 +192,42 @@ export default function EventsPage() {
                         {event.name}
                       </h3>
 
-                      <div className="mt-3 space-y-1 text-sm text-zinc-600">
+                      <div className="mt-3 space-y-1.5 text-sm text-zinc-600">
                         <p className="flex items-center gap-1.5">
                           <span>📍</span> {event.location || event.venue || 'Venue TBD'}
                         </p>
                         <p className="flex items-center gap-1.5">
                           <span>📅</span>{' '}
-                          {event.start ? new Date(event.start).toLocaleString() : 'Date TBD'}{' '}
-                          • {event.teams || event.teamCount || 8} Teams Max
+                          {event.start ? new Date(event.start).toLocaleString() : 'Date TBD'}
+                        </p>
+                        <p className="flex items-center gap-1.5 text-xs font-semibold text-zinc-500">
+                          <span>🏀</span> {teamCount} Teams • {playersPerTeam} Players/Team • Capacity: {eventJoinedCount}/{maxCapacity} Players
                         </p>
                       </div>
 
-                      <div className="mt-6 flex items-center gap-3">
+                      <div className="mt-6 flex flex-col gap-2">
                         {joined ? (
                           <Button
                             variant="secondary"
                             className="w-full justify-center"
                             onClick={() => openEventDetails(event)}
                           >
-                            View Fixtures & Bracket →
+                            View Fixtures & Squad →
                           </Button>
+                        ) : isFull ? (
+                          <button
+                            disabled
+                            className="w-full rounded-2xl bg-zinc-100 py-3 text-xs font-bold uppercase tracking-wider text-zinc-400 cursor-not-allowed"
+                          >
+                            Event Full (Max Capacity Reached)
+                          </button>
                         ) : (
                           <Button
                             variant="primary"
                             className="w-full justify-center"
-                            onClick={() => handleApply(event.id)}
+                            onClick={() => openRegisterModal(event)}
                           >
-                            Register for Event
+                            Register & Join Squad →
                           </Button>
                         )}
                       </div>
@@ -183,7 +240,82 @@ export default function EventsPage() {
         </div>
       </Card>
 
-      {/* Event Details & Match Fixtures Modal */}
+      {/* Position Selection Registration Modal */}
+      {registeringEvent && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl space-y-5">
+            <div className="flex items-start justify-between border-b border-zinc-100 pb-3">
+              <div>
+                <span className="rounded-full bg-red-600 px-3 py-1 text-[9px] font-extrabold uppercase tracking-widest text-white">
+                  {registeringEvent.format || '3v3'} Basketball
+                </span>
+                <h3 className="mt-2 text-xl font-bold text-black">{registeringEvent.name}</h3>
+                <p className="text-xs text-zinc-500">Select your position to be randomly assigned to an open squad.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeRegisterModal}
+                className="rounded-full p-1 text-zinc-400 hover:bg-zinc-100 hover:text-black"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Player Name</label>
+                <input
+                  type="text"
+                  required
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  placeholder="Your Name / Gamertag"
+                  className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Playing Position</label>
+                <select
+                  value={position}
+                  onChange={(e) => setPosition(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                >
+                  {BASKETBALL_POSITIONS.map((pos) => (
+                    <option key={pos.value} value={pos.value}>
+                      {pos.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="rounded-2xl border border-red-100 bg-red-50/50 p-3 text-xs text-red-700 space-y-1">
+                <p className="font-bold">🎲 Random Team Assignment</p>
+                <p>You will be randomly assigned to an open Team (Team 1, Team 2, etc.) for this tournament.</p>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeRegisterModal}
+                  className="rounded-xl px-4 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow hover:bg-red-500 disabled:opacity-50"
+                >
+                  {submitting ? 'Registering...' : 'Confirm Registration'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Event Details, Roster & Match Fixtures Modal */}
       {selectedEvent && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center backdrop-blur-sm">
           <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl">
@@ -210,23 +342,61 @@ export default function EventsPage() {
             </div>
 
             <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-6 space-y-6">
-              {/* Event Info Header */}
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Match Format</p>
-                  <p className="mt-1 text-base font-bold text-zinc-900">{selectedEvent.format || '3v3'} Basketball</p>
+              {/* Grouped Team Roster View */}
+              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 space-y-4">
+                <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900">
+                    Team Squad Rosters ({joinedEvents.filter((j) => j.eventId === selectedEvent.id).length} Registered Players)
+                  </h4>
                 </div>
 
-                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Tournament Type</p>
-                  <p className="mt-1 text-base font-bold text-zinc-900">{selectedEvent.tournamentType || 'Knockout'}</p>
-                </div>
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {Array.from(
+                    { length: Math.max(2, Number(selectedEvent.teamCount || selectedEvent.teams) || 4) },
+                    (_, i) => {
+                      const teamName = `Team ${i + 1}`;
+                      const teamPlayers = joinedEvents.filter(
+                        (j) => j.eventId === selectedEvent.id && j.assignedTeam === teamName
+                      );
+                      const playersPerTeam = getPlayersPerTeam(selectedEvent.format || '3v3');
 
-                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Registration</p>
-                  <p className="mt-1 text-base font-bold text-emerald-600">
-                    {isJoined ? '✓ You are Registered' : 'Open'}
-                  </p>
+                      return (
+                        <div
+                          key={teamName}
+                          className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm space-y-2"
+                        >
+                          <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                            <span className="font-extrabold text-xs text-red-600 uppercase tracking-wider">
+                              {teamName}
+                            </span>
+                            <span className="text-[9px] font-bold rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600">
+                              {teamPlayers.length}/{playersPerTeam} Players
+                            </span>
+                          </div>
+
+                          <div className="space-y-1.5 pt-1">
+                            {teamPlayers.length === 0 ? (
+                              <p className="text-[11px] italic text-zinc-400">No players assigned yet</p>
+                            ) : (
+                              teamPlayers.map((player, pIdx) => (
+                                <div
+                                  key={pIdx}
+                                  className="flex items-center justify-between text-xs bg-zinc-50 p-2 rounded-xl border border-zinc-100"
+                                >
+                                  <span className="font-semibold text-zinc-900">
+                                    {player.participantName}
+                                  </span>
+                                  <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">
+                                    {player.position || 'Guard'}
+                                  </span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+                  )}
                 </div>
               </div>
 
@@ -236,7 +406,7 @@ export default function EventsPage() {
               </div>
 
               <div className="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-200 pt-4">
-                {isJoined ? (
+                {joinedEvents.some((j) => j.eventId === selectedEvent.id) && (
                   <Button
                     variant="danger"
                     onClick={async () => {
@@ -246,10 +416,6 @@ export default function EventsPage() {
                     }}
                   >
                     Withdraw Registration
-                  </Button>
-                ) : (
-                  <Button variant="primary" onClick={() => handleApply(selectedEvent.id)}>
-                    Register Now
                   </Button>
                 )}
 

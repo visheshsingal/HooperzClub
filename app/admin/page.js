@@ -5,6 +5,14 @@ import { useRouter } from 'next/navigation';
 import BrandLogo from '../../components/BrandLogo';
 import FixturesBracket from '../../components/dashboard/FixturesBracket';
 
+function getPlayersPerTeam(format) {
+  if (format === '1v1') return 1;
+  if (format === '2v2') return 2;
+  if (format === '3v3') return 3;
+  if (format === '5v5') return 5;
+  return 3;
+}
+
 const adminNav = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'events', label: 'Basketball Events' },
@@ -16,6 +24,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
   const [events, setEvents] = useState([]);
+  const [joinedEntries, setJoinedEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedEventId, setExpandedEventId] = useState(null);
@@ -62,13 +71,15 @@ export default function AdminPage() {
           return;
         }
 
-        const [usersRes, eventsRes] = await Promise.all([
+        const [usersRes, eventsRes, joinedRes] = await Promise.all([
           fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
           fetch('/api/admin/events', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/dashboard/joined'),
         ]);
 
         if (usersRes.ok) setUsers(await usersRes.json());
         if (eventsRes.ok) setEvents(await eventsRes.json());
+        if (joinedRes.ok) setJoinedEntries(await joinedRes.json());
       } catch (error) {
         console.error('Unable to load admin data', error);
       } finally {
@@ -435,6 +446,7 @@ export default function AdminPage() {
                   ) : (
                     events.map((event) => {
                       const isExpanded = expandedEventId === event.id;
+                      const registeredPlayers = joinedEntries.filter((j) => j.eventId === event.id);
 
                       return (
                         <div key={event.id} className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
@@ -447,8 +459,8 @@ export default function AdminPage() {
                                 <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold text-zinc-700">
                                   {event.teams || event.teamCount || 8} Teams Max
                                 </span>
-                                <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold text-zinc-700">
-                                  {event.tournamentType || 'Knockout'}
+                                <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-800">
+                                  {registeredPlayers.length} Players Registered
                                 </span>
                               </div>
                               <h3 className="text-xl font-bold text-black">{event.name}</h3>
@@ -463,7 +475,7 @@ export default function AdminPage() {
                                 onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
                                 className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-800 transition hover:bg-zinc-100"
                               >
-                                {isExpanded ? 'Hide Fixtures' : 'Manage Bracket & Fixtures'}
+                                {isExpanded ? 'Hide Details' : 'Manage Bracket & Squad Rosters'}
                               </button>
                               <button
                                 type="button"
@@ -475,9 +487,65 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          {/* Expanded Fixtures Bracket View */}
+                          {/* Expanded Roster & Fixtures Bracket View */}
                           {isExpanded && (
-                            <div className="mt-6 border-t border-zinc-200 pt-6">
+                            <div className="mt-6 border-t border-zinc-200 pt-6 space-y-6">
+                              {/* Grouped Team Roster View */}
+                              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 space-y-4">
+                                <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
+                                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900">
+                                    Team Squad Rosters ({registeredPlayers.length} Total Players)
+                                  </h4>
+                                </div>
+
+                                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                                  {Array.from(
+                                    { length: Math.max(2, Number(event.teamCount || event.teams) || 4) },
+                                    (_, i) => {
+                                      const teamName = `Team ${i + 1}`;
+                                      const teamPlayers = registeredPlayers.filter((p) => p.assignedTeam === teamName);
+                                      const playersPerTeam = getPlayersPerTeam(event.format || '3v3');
+
+                                      return (
+                                        <div
+                                          key={teamName}
+                                          className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm space-y-2"
+                                        >
+                                          <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
+                                            <span className="font-extrabold text-xs text-red-600 uppercase tracking-wider">
+                                              {teamName}
+                                            </span>
+                                            <span className="text-[9px] font-bold rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600">
+                                              {teamPlayers.length}/{playersPerTeam} Players
+                                            </span>
+                                          </div>
+
+                                          <div className="space-y-1.5 pt-1">
+                                            {teamPlayers.length === 0 ? (
+                                              <p className="text-[11px] italic text-zinc-400">No players assigned yet</p>
+                                            ) : (
+                                              teamPlayers.map((player, pIdx) => (
+                                                <div
+                                                  key={pIdx}
+                                                  className="flex items-center justify-between text-xs bg-zinc-50 p-2 rounded-xl border border-zinc-100"
+                                                >
+                                                  <span className="font-semibold text-zinc-900">
+                                                    {player.participantName}
+                                                  </span>
+                                                  <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">
+                                                    {player.position || 'Guard'}
+                                                  </span>
+                                                </div>
+                                              ))
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    }
+                                  )}
+                                </div>
+                              </div>
+
                               <FixturesBracket
                                 fixtures={event.fixtures || []}
                                 isAdmin={true}
