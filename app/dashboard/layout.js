@@ -114,7 +114,7 @@ export default function DashboardLayout({ children }) {
           >
             <div className="flex h-14 items-center border-b border-zinc-800 px-4">
               <Link href="/dashboard/overview" className="flex items-center gap-3">
-                <BrandLogo className="h-5 w-auto max-w-[110px]" />
+                <BrandLogo className="h-4 w-auto max-w-[90px]" />
               </Link>
             </div>
 
