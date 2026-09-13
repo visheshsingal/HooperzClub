@@ -46,6 +46,7 @@ export async function POST(request) {
       start = '',
       fee = 0,
       description = '',
+      mapUrl = '',
       customFixtures,
     } = body;
 
@@ -70,6 +71,7 @@ export async function POST(request) {
       start,
       fee: Number(fee) || 0,
       description,
+      mapUrl,
       fixtures,
       createdBy: 'Admin',
       createdAt: new Date().toISOString(),

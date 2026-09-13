@@ -41,6 +41,7 @@ export default function AdminPage() {
     location: '',
     fee: 0,
     description: '',
+    mapUrl: '',
   });
 
   useEffect(() => {
@@ -141,6 +142,7 @@ export default function AdminPage() {
           location: '',
           fee: 0,
           description: '',
+          mapUrl: '',
         });
       }
     } catch (err) {
@@ -414,6 +416,18 @@ export default function AdminPage() {
                             onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
                             className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
                           />
+                        </div>
+
+                        <div className="sm:col-span-2">
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Google Map Link / Embed URL</label>
+                          <input
+                            type="url"
+                            placeholder="https://www.google.com/maps/... (or embed link for the court)"
+                            value={newEvent.mapUrl || ''}
+                            onChange={(e) => setNewEvent({ ...newEvent, mapUrl: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          />
+                          <p className="mt-1 text-[11px] text-zinc-500">Paste a Google Maps share or embed URL. If left empty, court name and city will be mapped automatically.</p>
                         </div>
                       </div>
 
