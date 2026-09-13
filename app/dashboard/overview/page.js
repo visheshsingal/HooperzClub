@@ -23,7 +23,6 @@ export default function OverviewPage() {
   const activeCount = events.filter((event) => new Date(event.start) >= new Date()).length;
   const joinedCount = joinedEvents.length;
   const teamCount = registeredTeams.length;
-  const credits = currentUser?.credits ?? 0;
 
   const hasTeams = teamCount > 0;
   const hasJoined = joinedCount > 0;
@@ -35,17 +34,16 @@ export default function OverviewPage() {
 
   return (
     <div className="space-y-8">
-      {/* Hero welcome */}
-      <div className="relative overflow-hidden rounded-xl border border-zinc-800/80 bg-[#0a0a0c] p-8 sm:p-10">
+      <div className="relative overflow-hidden rounded-2xl border border-zinc-200 bg-gradient-to-r from-white via-red-50 to-white p-8 shadow-sm sm:p-10">
         <div className="relative">
-          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-accent">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600">
             Welcome back
           </p>
-          <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <h1 className="mt-2 text-2xl font-bold tracking-tight text-black sm:text-3xl">
             Hey, {firstName} 👋
           </h1>
-          <p className="mt-2.5 max-w-xl text-sm text-zinc-400">
-            Build your squad, join tournaments, or create your own — everything in one place.
+          <p className="mt-2.5 max-w-xl text-sm text-zinc-600">
+            Build your squad, join tournaments, and organize your own events — all completely free.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
             {!hasTeams && (
@@ -58,22 +56,16 @@ export default function OverviewPage() {
                 Browse events
               </Button>
             )}
-            {hasTeams && credits > 0 && (
+            {(hasTeams || hasJoined || hasOrganized) && (
               <Button href="/dashboard/organize" variant="secondary">
                 Organize a tournament
-              </Button>
-            )}
-            {credits === 0 && (
-              <Button href="/dashboard/credits" variant="secondary">
-                Buy credits
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Stats row */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           label="My squads"
           value={teamCount}
@@ -102,23 +94,12 @@ export default function OverviewPage() {
             </svg>
           }
         />
-        <StatCard
-          label="Credits"
-          value={credits}
-          accent={credits === 0}
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-              <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-            </svg>
-          }
-        />
       </div>
 
       <div className="grid gap-8 lg:grid-cols-5">
-        {/* User journey flow */}
         <Card className="lg:col-span-2">
           <SectionTitle label="Getting started" title="Your journey" />
-          <p className="mt-2 text-sm text-zinc-500">
+          <p className="mt-2 text-sm text-zinc-600">
             Follow these steps to get the most out of Hooperz Club.
           </p>
           <div className="mt-6 space-y-3">
@@ -141,7 +122,7 @@ export default function OverviewPage() {
             <FlowStep
               step={3}
               title="Organize a tournament"
-              description="Create events & auto-generate fixtures (1 credit)"
+              description="Create events & auto-generate fixtures for free"
               href="/dashboard/organize"
               completed={hasOrganized}
               active={hasTeams && hasJoined && !hasOrganized}
@@ -149,7 +130,6 @@ export default function OverviewPage() {
           </div>
         </Card>
 
-        {/* Quick actions */}
         <Card className="lg:col-span-3">
           <SectionTitle label="Shortcuts" title="Quick actions" />
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -175,7 +155,7 @@ export default function OverviewPage() {
             />
             <QuickAction
               title="Create event"
-              subtitle="Costs 1 credit per event"
+              subtitle="Free to publish"
               href="/dashboard/organize"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
@@ -184,12 +164,12 @@ export default function OverviewPage() {
               }
             />
             <QuickAction
-              title="Buy credits"
-              subtitle={`Balance: ${credits} credits`}
-              href="/dashboard/credits"
+              title="Connect players"
+              subtitle="Meet local squads"
+              href="/dashboard/connect"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
-                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
+                  <path d="M8 11a3 3 0 100-6 3 3 0 000 6zm8 0a3 3 0 100-6 3 3 0 000 6zM3 20a4 4 0 018 0v1H3zm10 0a4 4 0 018 0v1h-8" />
                 </svg>
               }
             />
@@ -197,11 +177,10 @@ export default function OverviewPage() {
         </Card>
       </div>
 
-      {/* Recent events */}
       <Card>
         <div className="flex items-center justify-between gap-4">
           <SectionTitle label="Live now" title="Recent tournaments" />
-          <Button href="/dashboard/events" variant="ghost" className="text-red-500 hover:text-red-400">
+          <Button href="/dashboard/events" variant="ghost" className="text-red-600 hover:text-red-500">
             View all →
           </Button>
         </div>
@@ -224,17 +203,17 @@ export default function OverviewPage() {
               <Link
                 key={event.id}
                 href="/dashboard/events"
-                className="group rounded-xl border border-zinc-800 bg-[#0a0a0c] p-5 transition duration-150 hover:border-zinc-700 hover:bg-[#0e0e11]"
+                className="group rounded-2xl border border-zinc-200 bg-zinc-50 p-5 transition duration-150 hover:border-zinc-300 hover:bg-white"
               >
                 <div className="flex items-start justify-between gap-3">
                   <Badge variant="red">{event.sport}</Badge>
                   {event.fee > 0 ? (
-                    <span className="text-xs text-zinc-400">₹{event.fee}</span>
+                    <span className="text-xs text-zinc-500">₹{event.fee}</span>
                   ) : (
                     <Badge variant="green">Free</Badge>
                   )}
                 </div>
-                <h3 className="mt-3 text-sm font-bold text-white group-hover:text-accent transition duration-150">
+                <h3 className="mt-3 text-sm font-bold text-black group-hover:text-red-600 transition duration-150">
                   {event.name}
                 </h3>
                 <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">

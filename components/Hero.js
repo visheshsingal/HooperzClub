@@ -1,107 +1,60 @@
 ﻿'use client';
 
-const sports = ['Basketball', 'Football', 'Badminton'];
-
 export default function Hero() {
   return (
-    <section id="sports" className="relative h-screen w-full overflow-hidden bg-black">
-      <div className="absolute inset-0 z-0">
-        <video
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          className="h-full w-full object-cover"
-          style={{
-            animation: 'slowZoom 25s ease-in-out infinite alternate',
-            willChange: 'transform',
-          }}
-        >
-          <source
-            src="https://res.cloudinary.com/dewaaz2si/video/upload/12355471_1920_1080_30fps_hgyyrn.mp4"
-            type="video/mp4"
-          />
-        </video>
-        <div className="absolute inset-0" style={{ background: 'radial-gradient(circle at 30% 50%, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.96) 100%)' }} />
-      </div>
+    <section className="relative isolate overflow-hidden bg-black text-white">
+      <div
+        className="absolute inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: "url('https://images.pexels.com/photos/12993253/pexels-photo-12993253.jpeg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center center',
+          filter: 'saturate(1) brightness(0.95)',
+        }}
+      />
 
-      <div className="absolute left-1/4 top-1/4 z-0 h-[500px] w-[500px] rounded-full bg-red-500/10 blur-[150px]" />
-      <div className="absolute right-1/4 bottom-1/4 z-0 h-[400px] w-[400px] rounded-full bg-red-500/10 blur-[120px]" />
+      <div className="absolute inset-0 bg-black/20" />
+      <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,0,0,0.48)_0%,rgba(0,0,0,0.34)_30%,rgba(0,0,0,0.12)_60%,rgba(0,0,0,0.45)_100%)]" />
 
-      <div className="relative z-10 mx-auto max-w-7xl w-full h-full flex items-center px-8 sm:px-12">
-        <div className="flex flex-col items-start text-left space-y-8 max-w-3xl">
-          <div className="font-mono text-[10px] tracking-[0.3em] text-white/40 uppercase">
-            [ SPORTS HQ • ALL GAMES WELCOME ]
+      <div className="relative mx-auto flex min-h-[840px] max-w-6xl items-center px-5 pb-20 pt-32 md:px-8 lg:px-12">
+        <div className="max-w-2xl">
+          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80 backdrop-blur-[2px]">
+            Basketball culture
           </div>
 
-          <div className="space-y-4">
-            <h1 className="font-sans text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-white leading-none">
-              ONE PLATFORM FOR <br />
-              <span className="text-red-500">
-                EVERY SPORT.
-              </span>
-            </h1>
+          <h1 className="text-5xl font-black leading-[0.9] tracking-[-0.08em] text-white md:text-7xl lg:text-[6rem]">
+            Play hard.
+            <span className="mt-2 block text-red-500">Own the court.</span>
+          </h1>
 
-            <p className="max-w-lg text-sm text-slate-300 leading-relaxed font-light">
-              A premium destination for organizers, teams, and fans. Manage leagues, schedule matchdays, and scale your community with a modern black-and-red experience.
-            </p>
+          <p className="mt-6 max-w-xl text-base leading-7 text-white/80 md:text-lg">
+            Find local hoops, book your next game, organize pickup sessions, and build your squad around the next possession.
+          </p>
 
-            <div className="flex flex-wrap gap-3">
-              {sports.map((item) => (
-                <span key={item} className="border border-red-500/20 bg-white/5 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.25em] text-red-200">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-
-          <div>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
-              href="/login"
-              className="group relative inline-flex items-center gap-3 overflow-hidden rounded-none border border-red-500 bg-red-600 px-8 py-3.5 text-xs font-semibold tracking-[0.25em] text-white transition-all duration-500 hover:bg-red-500 hover:scale-105"
+              href="/signup"
+              className="inline-flex items-center justify-center rounded-full bg-red-600 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-white transition-transform duration-200 hover:-translate-y-0.5 hover:bg-red-500"
             >
-              <span>EXPLORE SPORTS</span>
-              <svg className="h-4 w-4 transition-transform duration-500 group-hover:translate-x-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              Join the league
             </a>
+            <a
+              href="/about"
+              className="inline-flex items-center justify-center rounded-full border border-white/15 bg-white/5 px-6 py-3 text-[10px] font-bold uppercase tracking-[0.25em] text-white transition-colors hover:border-white/30 hover:bg-white/10"
+            >
+              Explore
+            </a>
+          </div>
+
+          <div className="mt-10 flex flex-wrap gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-white/75">
+            {['pickup', 'tournaments', 'courts', 'teams'].map((tag) => (
+              <span key={tag} className="rounded-full border border-white/15 bg-black/20 px-3 py-2 backdrop-blur-[2px]">
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
       </div>
-
-      <style jsx global>{`
-        @keyframes fadeInUp {
-          from {
-            opacity: 0;
-            transform: translateY(40px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes fadeInDown {
-          from {
-            opacity: 0;
-            transform: translateY(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @keyframes slowZoom {
-          from {
-            transform: scale(1);
-          }
-          to {
-            transform: scale(1.08);
-          }
-        }
-      `}</style>
     </section>
   );
 }

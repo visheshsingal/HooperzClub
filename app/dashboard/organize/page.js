@@ -17,7 +17,7 @@ import {
 const formats = ['Knockout', 'League', 'Round Robin', 'Group + Knockout'];
 
 export default function OrganizePage() {
-  const { registeredTeams, addEvent, generateFixtures, currentUser } = useDashboard();
+  const { registeredTeams, addEvent, generateFixtures } = useDashboard();
   const [step, setStep] = useState(1);
   const [createData, setCreateData] = useState({
     name: '',
@@ -35,7 +35,6 @@ export default function OrganizePage() {
   const [submitting, setSubmitting] = useState(false);
 
   const upcomingTeams = useMemo(() => registeredTeams.map((team) => team.name), [registeredTeams]);
-  const credits = currentUser?.credits ?? 0;
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
@@ -58,11 +57,6 @@ export default function OrganizePage() {
 
   const handleCreateTournament = async (event) => {
     event.preventDefault();
-    if (credits < 1) {
-      showToast('You need at least 1 credit. Buy credits first.', 'error');
-      return;
-    }
-
     setSubmitting(true);
     const generatedFixtures = fixtures.length
       ? fixtures
@@ -111,26 +105,9 @@ export default function OrganizePage() {
       <PageHeader
         label="Step 3"
         title="Organize a tournament"
-        description="Create events and auto-generate match fixtures. Each event costs 1 credit."
-        action={
-          <div className="rounded-lg border border-white/10 bg-[#181818] px-4 py-2 text-center">
-            <p className="text-xs text-zinc-500">Your credits</p>
-            <p className="text-2xl font-bold text-red-500">{credits}</p>
-          </div>
-        }
+        description="Create events and auto-generate match fixtures — completely free."
       />
 
-      {credits < 1 && (
-        <div className="rounded-lg border border-red-500/30 bg-red-600/10 p-4 text-sm text-red-300">
-          You&apos;re out of credits.{' '}
-          <a href="/dashboard/credits" className="font-semibold underline hover:text-red-200">
-            Buy credits
-          </a>{' '}
-          to organize events.
-        </div>
-      )}
-
-      {/* Step indicator */}
       <div className="flex items-center gap-2">
         {[1, 2].map((s) => (
           <button
@@ -140,10 +117,10 @@ export default function OrganizePage() {
             className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition ${
               step === s
                 ? 'bg-red-600 text-white'
-                : 'bg-[#181818] text-zinc-500 hover:text-white'
+                : 'bg-zinc-100 text-zinc-600 hover:text-black'
             }`}
           >
-            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/30 text-xs">
+            <span className="flex h-6 w-6 items-center justify-center rounded-full bg-black/10 text-xs">
               {s}
             </span>
             {s === 1 ? 'Event details' : 'Fixtures & publish'}
@@ -268,7 +245,7 @@ export default function OrganizePage() {
                 fixtures.map((fixture, index) => (
                   <div
                     key={index}
-                    className="rounded border border-white/5 bg-black/40 px-4 py-3 text-sm text-zinc-300"
+                    className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-3 text-sm text-zinc-700"
                   >
                     {fixture}
                   </div>
@@ -277,7 +254,7 @@ export default function OrganizePage() {
             </div>
 
             {upcomingTeams.length > 0 && (
-              <div className="mt-6 rounded-lg border border-white/5 bg-[#181818] p-4">
+              <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
                 <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
                   Using your squads
                 </p>
@@ -296,16 +273,16 @@ export default function OrganizePage() {
               <Button
                 variant="primary"
                 onClick={handleCreateTournament}
-                disabled={submitting || credits < 1}
+                disabled={submitting}
               >
-                {submitting ? 'Publishing…' : 'Publish event (1 credit)'}
+                {submitting ? 'Publishing…' : 'Publish event for free'}
               </Button>
             </div>
           </Card>
 
-          <div className="rounded-lg border border-white/5 bg-[#181818] p-5">
-            <p className="text-sm font-semibold text-white">Event summary</p>
-            <div className="mt-3 grid gap-2 text-sm text-zinc-400 sm:grid-cols-2">
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+            <p className="text-sm font-semibold text-black">Event summary</p>
+            <div className="mt-3 grid gap-2 text-sm text-zinc-600 sm:grid-cols-2">
               <span>Name: {createData.name}</span>
               <span>Sport: {createData.sport}</span>
               <span>Location: {createData.location}</span>

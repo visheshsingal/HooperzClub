@@ -2,10 +2,8 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import AboutUs from "../components/AboutUs";
-import Footer from "../components/Footer";
 
 function HomeRedirect() {
   const router = useRouter();
@@ -22,14 +20,12 @@ function HomeRedirect() {
 
 export default function Home() {
   return (
-    <div className="flex flex-col min-h-screen bg-black text-white selection:bg-red-500 selection:text-white">
+    <div className="flex min-h-screen flex-col bg-white text-black selection:bg-red-600 selection:text-white">
       <HomeRedirect />
-      <Navbar />
       <main className="flex-grow">
         <Hero />
         <AboutUs />
       </main>
-      <Footer />
     </div>
   );
 }

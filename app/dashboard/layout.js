@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
+import BrandLogo from '../../components/BrandLogo';
 import { DashboardProvider } from './dashboard-context';
 
 const navLinks = [
@@ -65,15 +66,6 @@ const navLinks = [
       </svg>
     ),
   },
-  {
-    href: '/dashboard/credits',
-    label: 'Credits',
-    icon: (
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6" />
-      </svg>
-    ),
-  },
 ];
 
 export default function DashboardLayout({ children }) {
@@ -118,10 +110,10 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black text-white flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center bg-[#f4f4f4] text-black">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-          <p className="text-sm text-zinc-400">Loading your dashboard…</p>
+          <p className="text-sm text-zinc-600">Loading your dashboard…</p>
         </div>
       </div>
     );
@@ -129,27 +121,26 @@ export default function DashboardLayout({ children }) {
 
   return (
     <DashboardProvider user={currentUser}>
-      <div className="min-h-screen bg-black text-zinc-200">
+      <div className="min-h-screen bg-[#f5f5f5] text-zinc-900">
         <div className="flex min-h-screen">
           {sidebarOpen && (
-            <div className="fixed inset-0 z-40 bg-black/80 lg:hidden" onClick={() => setSidebarOpen(false)} />
+            <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
           )}
 
           <aside
-            className={`fixed inset-y-0 left-0 z-50 w-72 transform border-r border-zinc-900 bg-[#070709] transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:flex-shrink-0 lg:translate-x-0 ${
+            className={`fixed inset-y-0 left-0 z-50 w-72 transform border-r border-zinc-200 bg-white transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:flex-shrink-0 lg:translate-x-0 ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
-            <div className="flex h-16 items-center border-b border-zinc-900 px-5">
-              <Link href="/dashboard/overview" className="flex items-center gap-2">
-                <span className="text-sm font-bold tracking-[0.25em] text-white">HOOPERZ</span>
-                <span className="text-[10px] font-bold uppercase tracking-[0.25em] text-accent">Club</span>
+            <div className="flex h-16 items-center border-b border-zinc-200 px-5">
+              <Link href="/dashboard/overview" className="flex items-center gap-3">
+                <BrandLogo className="h-9 w-auto max-w-[180px]" />
               </Link>
             </div>
 
             <nav className="flex h-[calc(100vh-4rem)] flex-col overflow-y-auto p-4">
               <p className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-500">
-                Welcome Back.
+                Welcome back.
               </p>
               <div className="space-y-1">
                 {navLinks.map((link) => {
@@ -159,16 +150,16 @@ export default function DashboardLayout({ children }) {
                       key={link.href}
                       href={link.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 rounded-md border px-3 py-2 text-xs transition duration-150 relative ${
+                      className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition duration-150 relative ${
                         active
-                          ? 'border-zinc-800 bg-[#0e0e11] font-bold text-white shadow-none before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:w-[3px] before:h-4.5 before:bg-accent before:rounded-r-sm'
-                          : 'border-transparent text-zinc-400 hover:text-white hover:bg-zinc-900/30'
+                          ? 'border-red-100 bg-red-50 font-semibold text-black shadow-sm before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-r before:bg-red-600'
+                          : 'border-transparent text-zinc-600 hover:border-zinc-200 hover:bg-zinc-50 hover:text-black'
                       }`}
                     >
-                      <span className={active ? 'text-accent' : 'text-zinc-500 group-hover:text-zinc-350'}>{link.icon}</span>
-                      <span className="flex-1 ml-1">{link.label}</span>
+                      <span className={active ? 'text-red-600' : 'text-zinc-500'}>{link.icon}</span>
+                      <span className="flex-1">{link.label}</span>
                       {link.step && (
-                        <span className={`text-[9px] font-bold ${active ? 'text-accent' : 'text-zinc-650'}`}>
+                        <span className={`text-[9px] font-bold ${active ? 'text-red-600' : 'text-zinc-500'}`}>
                           {link.step}
                         </span>
                       )}
@@ -177,11 +168,11 @@ export default function DashboardLayout({ children }) {
                 })}
               </div>
 
-              <div className="mt-auto rounded-xl border border-zinc-900 bg-black/60 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Quick guide</p>
-                <ol className="mt-2 space-y-1 text-xs text-zinc-500">
-                  <li>1. Create your squad</li>
-                  <li>2. Browse & join events</li>
+              <div className="mt-auto rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Quick guide</p>
+                <ol className="mt-2 space-y-1 text-sm text-zinc-600">
+                  <li>1. Build your squad</li>
+                  <li>2. Join free events</li>
                   <li>3. Organize your own</li>
                 </ol>
               </div>
@@ -189,40 +180,33 @@ export default function DashboardLayout({ children }) {
           </aside>
 
           <div className="flex min-h-screen flex-1 flex-col">
-            <header className="sticky top-0 z-30 border-b border-zinc-900 bg-black/85 backdrop-blur-xl">
+            <header className="sticky top-0 z-30 border-b border-zinc-200 bg-white/90 backdrop-blur-xl">
               <div className="flex h-16 items-center justify-between px-6">
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setSidebarOpen((open) => !open)}
-                    className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-zinc-800 text-zinc-400 transition hover:border-zinc-700 hover:text-white lg:hidden"
+                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-zinc-200 text-zinc-700 transition hover:border-zinc-300 hover:text-black lg:hidden"
                   >
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
                       <path d="M4 7h16M4 12h16M4 17h16" />
                     </svg>
                   </button>
-                  <div className="hidden text-xs font-bold uppercase tracking-wider text-zinc-500 sm:block">Welcome back</div>
+                  <div className="hidden text-xs font-bold uppercase tracking-[0.25em] text-zinc-500 sm:block">Dashboard</div>
                 </div>
 
                 <div className="flex items-center gap-3">
-                  <Link
-                    href="/dashboard/credits"
-                    className="hidden items-center gap-2 rounded-md border border-zinc-800 bg-[#0a0a0c] px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-300 transition hover:border-zinc-700 hover:text-white sm:flex"
-                  >
-                    <span>Credits</span>
-                    <span className="font-extrabold text-accent">{currentUser?.credits ?? 0}</span>
-                  </Link>
-                  <div className="flex items-center gap-2 rounded-md border border-zinc-800 bg-[#0a0a0c] px-2.5 py-1.5">
-                    <div className="flex h-6.5 w-6.5 items-center justify-center rounded-full bg-accent text-xs font-bold text-white">
+                  <div className="flex items-center gap-2 rounded-xl border border-zinc-200 bg-zinc-50 px-2.5 py-1.5">
+                    <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-600 text-xs font-bold text-white">
                       {userInitial}
                     </div>
-                    <span className="hidden max-w-[120px] truncate text-xs font-bold text-zinc-300 sm:block">
+                    <span className="hidden max-w-[140px] truncate text-sm font-semibold text-zinc-700 sm:block">
                       {currentUser?.name || 'Player'}
                     </span>
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="rounded-md px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-zinc-400 hover:text-white hover:bg-zinc-900/30 cursor-pointer"
+                    className="rounded-xl border border-zinc-200 bg-white px-3 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-zinc-700 transition hover:border-zinc-300 hover:text-black"
                   >
                     Sign out
                   </button>

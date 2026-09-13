@@ -22,6 +22,13 @@ export async function POST(request) {
     }
 
     const client = await clientPromise;
+    if (!client) {
+      return new Response(JSON.stringify({ error: 'Database unavailable. Please try again later.' }), {
+        status: 503,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const db = client.db('hooperzclub');
     const users = db.collection('users');
 

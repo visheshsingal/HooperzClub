@@ -18,11 +18,13 @@ export default function AuthCard({ title, subtitle, onSubmit, children, submitLa
   };
 
   return (
-    <div className="relative z-10 w-full max-w-md rounded-[2rem] border border-white/10 bg-black/95 p-8 shadow-2xl shadow-black/20 backdrop-blur-xl">
+    <div className="relative z-10 w-full max-w-md rounded-[2rem] border border-black/10 bg-white p-8 shadow-[0_30px_80px_rgba(0,0,0,0.08)]">
       <div className="mb-8 space-y-3">
-        <p className="text-sm uppercase tracking-[0.35em] text-red-300/70">{title}</p>
-        <h1 className="text-3xl font-semibold text-white">{subtitle}</h1>
-        <p className="text-sm leading-relaxed text-slate-400">Create an account or log in to manage your sports community with secure access and a smooth dashboard experience.</p>
+        <p className="text-sm uppercase tracking-[0.35em] text-red-600">{title}</p>
+        <h1 className="text-3xl font-semibold text-black">{subtitle}</h1>
+        <p className="text-sm leading-relaxed text-black/60">
+          Create an account or log in to manage your sports community with secure access and a smooth dashboard experience.
+        </p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -30,7 +32,7 @@ export default function AuthCard({ title, subtitle, onSubmit, children, submitLa
         <button
           type="submit"
           disabled={loading}
-          className="inline-flex w-full items-center justify-center rounded-full bg-red-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="inline-flex w-full items-center justify-center rounded-full bg-red-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {loading ? 'Processing...' : submitLabel}
         </button>

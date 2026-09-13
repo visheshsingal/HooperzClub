@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useDashboard } from '../dashboard-context';
-import EventPayment from './event-payment';
 import {
   PageHeader,
   Card,
@@ -20,14 +19,12 @@ export default function EventsPage() {
     registeredTeams,
     joinedEvents,
     joinEvent,
-    addJoinedEvent,
     deleteEvent,
     discardJoin,
     currentUser,
   } = useDashboard();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [selectedTeamId, setSelectedTeamId] = useState('');
-  const [isPaymentRequested, setIsPaymentRequested] = useState(false);
   const [sportFilter, setSportFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('All');
@@ -40,16 +37,13 @@ export default function EventsPage() {
 
   const openEventDetails = (event) => {
     setSelectedEvent(event);
-    setIsPaymentRequested(false);
   };
 
   const closeEventDetails = () => {
     setSelectedEvent(null);
     setSelectedTeamId('');
-    setIsPaymentRequested(false);
   };
 
-  const selectedTeam = registeredTeams.find((teamEntry) => teamEntry._id === selectedTeamId);
   const isJoined = selectedEvent
     ? joinedEvents.some((joined) => joined.eventId === selectedEvent.id)
     : false;
@@ -61,12 +55,6 @@ export default function EventsPage() {
       return;
     }
 
-    const event = events.find((item) => item.id === eventId);
-    if (event?.fee > 0) {
-      setIsPaymentRequested(true);
-      return;
-    }
-
     try {
       await joinEvent(eventId, team);
       showToast(`Applied with ${team.name}!`);
@@ -74,12 +62,6 @@ export default function EventsPage() {
     } catch {
       showToast('Failed to apply. Try again.', 'error');
     }
-  };
-
-  const handlePaymentSuccess = (joined) => {
-    addJoinedEvent(joined);
-    closeEventDetails();
-    showToast('Payment successful — you\'re in!');
   };
 
   const locations = ['All', ...Array.from(new Set(events.map((event) => event.location || event.venue).filter(Boolean)))];
@@ -100,7 +82,7 @@ export default function EventsPage() {
       <PageHeader
         label="Step 2"
         title="Browse & join events"
-        description="Find tournaments, pick your squad, and apply. Paid events go through secure checkout."
+        description="Find tournaments, pick your squad, and apply. Everything is free."
         action={
           registeredTeams.length === 0 ? (
             <Button href="/dashboard/teams" variant="primary">
@@ -146,22 +128,18 @@ export default function EventsPage() {
                 return (
                   <article
                     key={event.id}
-                    className="group relative overflow-hidden rounded-lg border border-white/10 bg-[#181818] transition hover:border-red-500/40"
+                    className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 transition hover:border-red-200 hover:bg-white"
                   >
-                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-600 to-red-900 opacity-0 transition group-hover:opacity-100" />
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-500 to-red-700 opacity-0 transition group-hover:opacity-100" />
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-3">
                         <Badge variant="red">{event.sport}</Badge>
                         <div className="flex gap-2">
                           {joined && <Badge variant="green">Joined</Badge>}
-                          {event.fee > 0 ? (
-                            <span className="text-xs font-medium text-zinc-400">₹{event.fee}</span>
-                          ) : (
-                            <Badge>Free</Badge>
-                          )}
+                          <Badge>{event.fee > 0 ? `₹${event.fee}` : 'Free'}</Badge>
                         </div>
                       </div>
-                      <h3 className="mt-3 text-lg font-semibold text-white group-hover:text-red-400 transition">
+                      <h3 className="mt-3 text-lg font-semibold text-black group-hover:text-red-600 transition">
                         {event.name}
                       </h3>
                       <div className="mt-2 space-y-1 text-sm text-zinc-500">
@@ -184,14 +162,13 @@ export default function EventsPage() {
         </div>
       </Card>
 
-      {/* Event detail modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 p-4 sm:items-center">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-lg border border-white/10 bg-[#141414] shadow-2xl">
-            <div className="flex items-start justify-between border-b border-white/5 p-5">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 sm:items-center">
+          <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl">
+            <div className="flex items-start justify-between border-b border-zinc-200 p-5">
               <div>
                 <Badge variant="red">{selectedEvent.sport}</Badge>
-                <h2 className="mt-2 text-2xl font-bold text-white">{selectedEvent.name}</h2>
+                <h2 className="mt-2 text-2xl font-bold text-black">{selectedEvent.name}</h2>
                 <p className="mt-1 text-sm text-zinc-500">
                   by {selectedEvent.createdBy || 'Organizer'}
                 </p>
@@ -199,7 +176,7 @@ export default function EventsPage() {
               <button
                 type="button"
                 onClick={closeEventDetails}
-                className="rounded p-2 text-zinc-400 transition hover:bg-white/5 hover:text-white"
+                className="rounded-xl p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
               >
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
                   <path d="M18 6L6 18M6 6l12 12" />
@@ -209,9 +186,9 @@ export default function EventsPage() {
 
             <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-5 space-y-5">
               <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-lg bg-[#181818] p-4">
+                <div className="rounded-2xl bg-zinc-50 p-4">
                   <p className="text-xs uppercase tracking-wider text-zinc-500">Details</p>
-                  <div className="mt-2 space-y-1 text-sm text-zinc-300">
+                  <div className="mt-2 space-y-1 text-sm text-zinc-700">
                     <p>Location: {selectedEvent.location || 'TBD'}</p>
                     <p>Date: {selectedEvent.start || 'TBD'}</p>
                     <p>Format: {selectedEvent.fixtureType || 'TBD'}</p>
@@ -219,18 +196,18 @@ export default function EventsPage() {
                     <p>Fee: {selectedEvent.fee > 0 ? `₹${selectedEvent.fee}` : 'Free'}</p>
                   </div>
                 </div>
-                <div className="rounded-lg bg-[#181818] p-4">
+                <div className="rounded-2xl bg-zinc-50 p-4">
                   <p className="text-xs uppercase tracking-wider text-zinc-500">Description</p>
-                  <p className="mt-2 text-sm text-zinc-300">
+                  <p className="mt-2 text-sm text-zinc-700">
                     {selectedEvent.description || 'No description provided.'}
                   </p>
                 </div>
               </div>
 
               {selectedEvent.fixtures?.length > 0 && (
-                <div className="rounded-lg bg-[#181818] p-4">
+                <div className="rounded-2xl bg-zinc-50 p-4">
                   <p className="text-xs uppercase tracking-wider text-zinc-500">Fixtures</p>
-                  <ol className="mt-2 space-y-1 list-decimal list-inside text-sm text-zinc-400">
+                  <ol className="mt-2 space-y-1 list-decimal list-inside text-sm text-zinc-600">
                     {selectedEvent.fixtures.map((fixture, index) => (
                       <li key={index}>{fixture}</li>
                     ))}
@@ -239,7 +216,7 @@ export default function EventsPage() {
               )}
 
               {!isJoined && (
-                <div className="rounded-lg border border-white/10 bg-black/40 p-4">
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
                   <Select
                     label="Select your squad"
                     value={selectedTeamId}
@@ -255,11 +232,9 @@ export default function EventsPage() {
                       ))}
                   </Select>
                   {registeredTeams.filter((team) => team.sport === selectedEvent.sport).length === 0 && (
-                    <p className="mt-2 text-sm text-red-400">
+                    <p className="mt-2 text-sm text-red-600">
                       No {selectedEvent.sport} squad found.{' '}
-                      <a href="/dashboard/teams" className="underline">
-                        Create one
-                      </a>
+                      <a href="/dashboard/teams" className="underline">Create one</a>
                     </p>
                   )}
                 </div>
@@ -279,7 +254,7 @@ export default function EventsPage() {
                   </Button>
                 ) : (
                   <Button variant="primary" onClick={() => handleApply(selectedEvent.id)}>
-                    {selectedEvent.fee > 0 ? `Apply & pay ₹${selectedEvent.fee}` : 'Apply to event'}
+                    Apply to event
                   </Button>
                 )}
 
@@ -296,15 +271,6 @@ export default function EventsPage() {
                   </Button>
                 )}
               </div>
-
-              {isPaymentRequested && selectedEvent?.fee > 0 && selectedTeam && (
-                <EventPayment
-                  event={selectedEvent}
-                  team={selectedTeam}
-                  onSuccess={handlePaymentSuccess}
-                  onError={(err) => showToast(err.message || 'Payment failed.', 'error')}
-                />
-              )}
             </div>
           </div>
         </div>

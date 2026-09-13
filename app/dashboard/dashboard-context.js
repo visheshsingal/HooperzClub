@@ -49,52 +49,7 @@ export function DashboardProvider({ children, user }) {
     setCurrentUser((prev) => (prev ? { ...prev, ...updates } : prev));
   };
 
-  const adjustCredits = async (amount) => {
-    if (!currentUser?.userId) {
-      throw new Error('Unable to confirm user.');
-    }
-
-    const token = window.localStorage.getItem('hooperz_token');
-    const response = await fetch(`${apiBase}/credits`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ amount }),
-    });
-
-    if (!response.ok) {
-      const body = await response.json();
-      throw new Error(body.error || 'Unable to adjust credits.');
-    }
-
-    const updatedUser = await response.json();
-    setCurrentUser(updatedUser);
-    return updatedUser;
-  };
-
-  const buyCredits = async (amount) => {
-    if (amount <= 0) {
-      throw new Error('Enter a valid credit amount.');
-    }
-    return adjustCredits(amount);
-  };
-
-  const spendCredits = async (amount) => {
-    if (amount <= 0) {
-      throw new Error('Enter a valid credit amount to spend.');
-    }
-    return adjustCredits(-amount);
-  };
-
   const addEvent = async (event) => {
-    if (!currentUser?.credits || currentUser.credits < 1) {
-      throw new Error('You need at least 1 credit to create an event.');
-    }
-
-    await spendCredits(1);
-
     const enrichedEvent = {
       ...event,
       fixtures: event.fixtures ?? [],
@@ -102,23 +57,18 @@ export function DashboardProvider({ children, user }) {
       createdAt: new Date().toISOString(),
     };
 
-    try {
-      const response = await fetch(`${apiBase}/events`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(enrichedEvent),
-      });
+    const response = await fetch(`${apiBase}/events`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(enrichedEvent),
+    });
 
-      if (!response.ok) {
-        throw new Error('Unable to save event.');
-      }
-
-      const savedEvent = await response.json();
-      setEvents((prev) => [savedEvent, ...prev]);
-    } catch (error) {
-      await adjustCredits(1);
-      throw error;
+    if (!response.ok) {
+      throw new Error('Unable to save event.');
     }
+
+    const savedEvent = await response.json();
+    setEvents((prev) => [savedEvent, ...prev]);
   };
 
   const registerTeam = async (team) => {
@@ -267,9 +217,6 @@ export function DashboardProvider({ children, user }) {
         generateFixtures,
         currentUser,
         updateCurrentUser,
-        buyCredits,
-        spendCredits,
-        adjustCredits,
       }}
     >
       {children}
