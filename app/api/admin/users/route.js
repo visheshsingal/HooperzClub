@@ -26,7 +26,6 @@ export async function GET(request) {
       email: user.email,
       name: user.name,
       blocked: !!user.blocked,
-      credits: user.credits ?? 0,
       createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
     }));
     return new Response(JSON.stringify(sanitized), { status: 200, headers: { 'Content-Type': 'application/json' } });
@@ -45,7 +44,7 @@ export async function PATCH(request) {
 
   try {
     const body = await request.json();
-    const { userId, blocked, creditDelta } = body;
+    const { userId, blocked } = body;
 
     if (!userId) {
       return new Response(JSON.stringify({ error: 'userId is required.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
@@ -55,19 +54,14 @@ export async function PATCH(request) {
       return new Response(JSON.stringify({ error: 'blocked must be boolean.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
-    if (creditDelta !== undefined && typeof creditDelta !== 'number') {
-      return new Response(JSON.stringify({ error: 'creditDelta must be a number.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
-    }
-
     const client = await clientPromise;
     const db = client.db('hooperzclub');
-    const update = {};
-    if (blocked !== undefined) update.blocked = blocked;
-    if (creditDelta !== undefined) update.$inc = { credits: creditDelta };
+    const update = { $set: {} };
+    if (blocked !== undefined) update.$set.blocked = blocked;
 
     const result = await db.collection('users').findOneAndUpdate(
       { _id: new ObjectId(userId) },
-      update.$inc ? { ...update } : { $set: update },
+      update,
       { returnDocument: 'after' }
     );
 
@@ -80,8 +74,7 @@ export async function PATCH(request) {
       _id: user._id.toString(),
       email: user.email,
       name: user.name,
-      blocked: user.blocked || false,
-      credits: user.credits ?? 0,
+      blocked: !!user.blocked,
       createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : user.createdAt,
     }), { status: 200, headers: { 'Content-Type': 'application/json' } });
   } catch (error) {
