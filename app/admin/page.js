@@ -98,8 +98,8 @@ export default function AdminPage() {
           }`}
         >
           <div className="flex h-16 items-center border-b border-zinc-800 px-4">
-            <div className="flex h-10 items-center justify-start overflow-hidden">
-              <BrandLogo className="h-9 w-auto md:h-10 max-w-[160px]" />
+            <div className="flex h-12 items-center justify-start">
+              <BrandLogo className="h-10 w-auto max-w-[180px]" />
             </div>
           </div>
 

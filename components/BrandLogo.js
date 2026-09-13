@@ -1,6 +1,6 @@
 'use client';
 
-const LOGO_URL = 'https://plain-apac-prod-public.komododecks.com/202609/13/zINRQ2nZc718RGX7wikh/image.png';
+const LOGO_URL = '/logo.png';
 
 export default function BrandLogo({ className = '' }) {
   return (
