@@ -112,9 +112,9 @@ export default function DashboardLayout({ children }) {
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
-            <div className="flex h-14 items-center border-b border-zinc-800 px-2">
-              <Link href="/dashboard/overview" className="flex h-7 w-[78px] items-center justify-center overflow-hidden rounded-sm">
-                <BrandLogo className="h-7 w-[78px] object-contain" />
+            <div className="flex h-14 items-center border-b border-zinc-800 px-3">
+              <Link href="/dashboard/overview" className="flex h-9 w-[110px] items-center justify-center overflow-hidden rounded-sm">
+                <BrandLogo className="h-9 w-[110px] object-contain" />
               </Link>
             </div>
 
