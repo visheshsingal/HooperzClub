@@ -159,23 +159,29 @@ export default function OverviewPage() {
               <Link
                 key={event.id}
                 href="/dashboard/events"
-                className="group rounded-2xl border border-zinc-200 bg-zinc-50 p-5 transition duration-150 hover:border-zinc-300 hover:bg-white"
+                className="group rounded-2xl border border-zinc-200 bg-white p-5 shadow-2xs transition duration-150 hover:-translate-y-0.5 hover:border-zinc-300 hover:shadow-xs"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <Badge variant="red">{event.sport}</Badge>
+                  <span className="rounded-lg bg-zinc-900 px-2.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white">
+                    {event.sport || 'Basketball'}
+                  </span>
                   {event.fee > 0 ? (
-                    <span className="text-xs text-zinc-500">₹{event.fee}</span>
+                    <span className="rounded-lg border border-zinc-200 bg-zinc-50 px-2 py-0.5 text-xs font-bold text-zinc-700">₹{event.fee}</span>
                   ) : (
-                    <Badge variant="green">Free</Badge>
+                    <span className="rounded-lg border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-700">Free</span>
                   )}
                 </div>
-                <h3 className="mt-3 text-sm font-bold text-black group-hover:text-red-600 transition duration-150">
+                <h3 className="mt-3 text-sm font-bold text-zinc-950 group-hover:text-red-600 transition duration-150">
                   {event.name}
                 </h3>
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-zinc-500">
-                  <span>{event.location || 'Location TBD'}</span>
-                  <span>•</span>
-                  <span>{event.start || 'Date TBD'}</span>
+                <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-zinc-500">
+                  <span className="flex items-center gap-1">
+                    <svg className="h-3.5 w-3.5 text-zinc-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 21s-6-5.6-6-10a6 6 0 1112 0c0 4.4-6 10-6 10z" />
+                      <circle cx="12" cy="11" r="2" />
+                    </svg>
+                    {event.location || 'Location TBD'}
+                  </span>
                   <span>•</span>
                   <span>{event.teams} teams</span>
                 </div>
