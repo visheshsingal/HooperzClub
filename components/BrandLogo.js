@@ -10,8 +10,10 @@ export default function BrandLogo({ className = '' }) {
       className={className}
       style={{
         objectFit: 'contain',
-        width: 'auto',
+        width: '100%',
         height: '100%',
+        maxWidth: '100%',
+        maxHeight: '100%',
         display: 'block',
       }}
     />
