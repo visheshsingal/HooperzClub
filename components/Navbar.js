@@ -8,7 +8,7 @@ export default function Navbar() {
     <header className="fixed inset-x-0 top-0 z-50 w-full border-b border-white/10 bg-black/95 shadow-lg backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
         <Link href="/" className="flex items-center gap-2">
-          <div className="flex h-12 items-center justify-start md:h-14">
+          <div className="flex h-12 w-48 items-center justify-start overflow-hidden md:h-14 md:w-56">
             <BrandLogo className="h-10 w-auto md:h-12 max-w-[220px]" />
           </div>
         </Link>
