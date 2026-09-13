@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 
-export default function FixturesBracket({ fixtures = [], isAdmin = false, onUpdateMatch = null }) {
+export default function FixturesBracket({ fixtures = [], isAdmin = false, onUpdateMatch = null, onDeleteMatch = null }) {
   const [editingMatchId, setEditingMatchId] = useState(null);
   const [scoreA, setScoreA] = useState('');
   const [scoreB, setScoreB] = useState('');
@@ -195,7 +195,7 @@ export default function FixturesBracket({ fixtures = [], isAdmin = false, onUpda
                             </div>
                           </div>
                         ) : (
-                          <div className="flex justify-end">
+                          <div className="flex justify-end gap-2">
                             <button
                               type="button"
                               onClick={() => handleEditClick(match)}
@@ -203,6 +203,15 @@ export default function FixturesBracket({ fixtures = [], isAdmin = false, onUpda
                             >
                               Update Score & Winner
                             </button>
+                            {onDeleteMatch && (
+                              <button
+                                type="button"
+                                onClick={() => onDeleteMatch(match.id)}
+                                className="rounded-lg border border-red-200 bg-red-50 px-2.5 py-1 text-[10px] font-semibold text-red-600 hover:bg-red-100"
+                              >
+                                Remove Match
+                              </button>
+                            )}
                           </div>
                         )}
                       </div>

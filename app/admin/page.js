@@ -191,7 +191,58 @@ export default function AdminPage() {
     }
   };
 
+  const getEventTeamNames = (event) => {
+    if (!event) return [];
+    const names = Array.isArray(event.teamNames) && event.teamNames.length > 0 ? event.teamNames : [];
+    const seen = new Set();
+
+    names.forEach((name) => {
+      const clean = String(name || '').trim();
+      if (clean) seen.add(clean);
+    });
+
+    (event.fixtures || []).forEach((match) => {
+      [match.teamA, match.teamB].forEach((name) => {
+        const clean = String(name || '').trim();
+        if (clean && !seen.has(clean)) {
+          seen.add(clean);
+          names.push(clean);
+        }
+      });
+    });
+
+    const teamCount = Math.max(2, Number(event.teamCount || event.teams) || 4);
+    const output = [];
+    for (let i = 0; i < teamCount; i += 1) {
+      output.push(names[i] || `Team ${i + 1}`);
+    }
+    return output;
+  };
+
   const selectedFixtureEvent = events.find((event) => event.id === selectedFixtureEventId) || events[0] || null;
+  const selectedFixtureTeams = selectedFixtureEvent ? getEventTeamNames(selectedFixtureEvent) : [];
+
+  const handleRenameEventTeam = async (eventId, teamIndex, value) => {
+    const nextNames = [...getEventTeamNames(events.find((event) => event.id === eventId) || selectedFixtureEvent || { teamNames: [] })];
+    nextNames[teamIndex] = value || `Team ${teamIndex + 1}`;
+
+    const token = localStorage.getItem('hooperz_token');
+    const response = await fetch('/api/admin/events/fixtures', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ eventId, action: 'set-team-names', teamNames: nextNames }),
+    });
+
+    if (response.ok) {
+      const body = await response.json();
+      setEvents((prev) =>
+        prev.map((event) => (event.id === eventId ? { ...event, teamNames: body.teamNames, fixtures: body.fixtures } : event))
+      );
+    }
+  };
 
   const handleCreateFixture = async () => {
     if (!selectedFixtureEvent || !newFixture.teamA.trim() || !newFixture.teamB.trim()) return;
@@ -217,6 +268,25 @@ export default function AdminPage() {
         prev.map((event) => (event.id === selectedFixtureEvent.id ? { ...event, fixtures: body.fixtures } : event))
       );
       setNewFixture({ round: 'Quarterfinal', teamA: '', teamB: '' });
+    }
+  };
+
+  const handleDeleteFixture = async (eventId, matchId) => {
+    const token = localStorage.getItem('hooperz_token');
+    const response = await fetch('/api/admin/events/fixtures', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ eventId, matchId, action: 'delete' }),
+    });
+
+    if (response.ok) {
+      const body = await response.json();
+      setEvents((prev) =>
+        prev.map((event) => (event.id === eventId ? { ...event, fixtures: body.fixtures } : event))
+      );
     }
   };
 
@@ -704,29 +774,37 @@ export default function AdminPage() {
 
                     <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
                       <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-700">Create fixture manually</h3>
-                      <div className="mt-4 grid gap-3 md:grid-cols-3">
-                        <input
-                          type="text"
-                          value={newFixture.round}
-                          onChange={(e) => setNewFixture({ ...newFixture, round: e.target.value })}
-                          placeholder="Round name"
-                          className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
-                        />
-                        <input
-                          type="text"
-                          value={newFixture.teamA}
-                          onChange={(e) => setNewFixture({ ...newFixture, teamA: e.target.value })}
-                          placeholder="Team A"
-                          className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
-                        />
-                        <input
-                          type="text"
-                          value={newFixture.teamB}
-                          onChange={(e) => setNewFixture({ ...newFixture, teamB: e.target.value })}
-                          placeholder="Team B"
-                          className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
-                        />
-                      </div>
+                      {selectedFixtureEvent && (
+                        <div className="mt-4 grid gap-3 md:grid-cols-3">
+                          <input
+                            type="text"
+                            value={newFixture.round}
+                            onChange={(e) => setNewFixture({ ...newFixture, round: e.target.value })}
+                            placeholder="Round name"
+                            className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                          />
+                          <select
+                            value={newFixture.teamA}
+                            onChange={(e) => setNewFixture({ ...newFixture, teamA: e.target.value })}
+                            className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                          >
+                            <option value="">Select Team A</option>
+                            {selectedFixtureTeams.map((teamName) => (
+                              <option key={`teamA-${teamName}`} value={teamName}>{teamName}</option>
+                            ))}
+                          </select>
+                          <select
+                            value={newFixture.teamB}
+                            onChange={(e) => setNewFixture({ ...newFixture, teamB: e.target.value })}
+                            className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                          >
+                            <option value="">Select Team B</option>
+                            {selectedFixtureTeams.map((teamName) => (
+                              <option key={`teamB-${teamName}`} value={teamName}>{teamName}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
                       <div className="mt-4 flex justify-end">
                         <button
                           type="button"
@@ -746,12 +824,34 @@ export default function AdminPage() {
                           onUpdateMatch={(matchId, scoreA, scoreB, winner) =>
                             handleUpdateMatchScore(selectedFixtureEvent.id, matchId, scoreA, scoreB, winner)
                           }
+                          onDeleteMatch={(matchId) => handleDeleteFixture(selectedFixtureEvent.id, matchId)}
                         />
                       </div>
                     )}
                   </div>
 
                   <div className="space-y-4">
+                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                      <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-700">Team name flow</h3>
+                      {selectedFixtureEvent ? (
+                        <div className="mt-4 space-y-3">
+                          {selectedFixtureTeams.map((teamName, index) => (
+                            <div key={`${selectedFixtureEvent.id}-team-${index}`} className="flex items-center gap-2">
+                              <span className="w-8 text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">{index + 1}</span>
+                              <input
+                                type="text"
+                                value={teamName}
+                                onChange={(e) => handleRenameEventTeam(selectedFixtureEvent.id, index, e.target.value)}
+                                className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="mt-3 text-sm text-zinc-500">Select an event to configure team names.</p>
+                      )}
+                    </div>
+
                     <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
                       <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-700">Player team control</h3>
                       {selectedFixtureEvent ? (
