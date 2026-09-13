@@ -126,11 +126,12 @@ export function DashboardProvider({ children, user }) {
     setJoinedEvents((prev) => prev.filter((joined) => joined.eventId !== eventId));
   };
 
-  const joinEvent = async (eventId, position = 'Point Guard (PG)', participantName = '') => {
+  const joinEvent = async (eventId, position = 'Point Guard (PG)', participantName = '', friends = []) => {
     const payload = {
       eventId,
       position,
       participantName: participantName || currentUser?.name || 'Player',
+      friends,
     };
 
     const response = await fetch(`${apiBase}/joined`, {
@@ -144,9 +145,13 @@ export function DashboardProvider({ children, user }) {
       throw new Error(errBody.error || 'Unable to join event.');
     }
 
-    const savedJoin = await response.json();
-    setJoinedEvents((prev) => [savedJoin, ...prev]);
-    return savedJoin;
+    const resData = await response.json();
+    // Refresh joined events list to include main user + friends
+    const joinedRes = await fetch(`${apiBase}/joined`);
+    if (joinedRes.ok) {
+      setJoinedEvents(await joinedRes.json());
+    }
+    return resData;
   };
 
   const discardJoin = async (eventId) => {

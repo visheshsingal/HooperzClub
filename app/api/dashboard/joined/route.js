@@ -29,7 +29,7 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { eventId, participantName, position } = body;
+    const { eventId, participantName, position, friends = [] } = body;
 
     if (!eventId) {
       return new Response(JSON.stringify({ error: 'eventId is required.' }), {
@@ -41,22 +41,51 @@ export async function POST(request) {
     const client = await clientPromise;
     const db = client.db('hooperzclub');
 
-    // 1. Fetch Event to check capacity & team format
+    // 1. Fetch Event to check status, capacity & format
     const event = await db.collection('events').findOne({ id: eventId });
-    const teamCount = Math.max(2, Number(event?.teamCount || event?.teams) || 4);
-    const playersPerTeam = getPlayersPerTeam(event?.format || '3v3');
-    const maxCapacity = teamCount * playersPerTeam;
+    if (!event) {
+      return new Response(JSON.stringify({ error: 'Event not found.' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
-    // 2. Check current registrations for this event
-    const existingJoined = await db.collection('joined').find({ eventId }).toArray();
-    if (existingJoined.length >= maxCapacity) {
+    // Check if tournament has started or completed
+    const isStarted = event.start && new Date(event.start) < new Date();
+    const isClosed = event.status === 'In Progress' || event.status === 'Completed' || event.status === 'Closed';
+
+    if (isStarted || isClosed) {
       return new Response(
-        JSON.stringify({ error: 'Registration Full! This Basketball event has reached maximum capacity.' }),
+        JSON.stringify({ error: 'Registration Closed! This tournament has already started or is completed.' }),
         { status: 400, headers: { 'Content-Type': 'application/json' } }
       );
     }
 
-    // 3. Random Team Assignment among teams with open slots
+    const teamCount = Math.max(2, Number(event.teamCount || event.teams) || 4);
+    const playersPerTeam = getPlayersPerTeam(event.format || '3v3');
+    const maxCapacity = teamCount * playersPerTeam;
+
+    // Total squad size (main user + friends)
+    const validFriends = (Array.isArray(friends) ? friends : []).filter((f) => f.name && f.name.trim());
+    const totalSquadSize = 1 + validFriends.length;
+
+    if (totalSquadSize > playersPerTeam) {
+      return new Response(
+        JSON.stringify({ error: `Your group of ${totalSquadSize} exceeds the max ${playersPerTeam} players per team for this ${event.format || '3v3'} format.` }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 2. Check current registrations for this event
+    const existingJoined = await db.collection('joined').find({ eventId }).toArray();
+    if (existingJoined.length + totalSquadSize > maxCapacity) {
+      return new Response(
+        JSON.stringify({ error: `Not enough spots left! Only ${maxCapacity - existingJoined.length} spot(s) remaining.` }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // 3. Find a team with at least totalSquadSize open slots
     const allTeams = Array.from({ length: teamCount }, (_, i) => `Team ${i + 1}`);
     const teamCountsMap = {};
     allTeams.forEach((t) => (teamCountsMap[t] = 0));
@@ -66,25 +95,47 @@ export async function POST(request) {
       }
     });
 
-    const openTeams = allTeams.filter((t) => teamCountsMap[t] < playersPerTeam);
-    const assignedTeam = openTeams.length > 0
-      ? openTeams[Math.floor(Math.random() * openTeams.length)]
-      : allTeams[Math.floor(Math.random() * allTeams.length)];
+    const openTeamsForGroup = allTeams.filter((t) => playersPerTeam - teamCountsMap[t] >= totalSquadSize);
 
-    const joined = {
-      eventId,
-      participantName: participantName || 'Basketball Baller',
-      position: position || 'Guard',
-      assignedTeam,
-      joinedAt: new Date().toISOString(),
-    };
+    if (openTeamsForGroup.length === 0) {
+      return new Response(
+        JSON.stringify({ error: `No single team has ${totalSquadSize} open spots available together.` }),
+        { status: 400, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
 
-    await db.collection('joined').insertOne(joined);
+    const assignedTeam = openTeamsForGroup[Math.floor(Math.random() * openTeamsForGroup.length)];
+    const timestamp = new Date().toISOString();
 
-    return new Response(JSON.stringify(joined), {
-      status: 201,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    // Group players to insert (Main user + friends)
+    const entriesToInsert = [
+      {
+        eventId,
+        participantName: participantName || 'Basketball Baller',
+        position: position || 'Guard',
+        assignedTeam,
+        joinedAt: timestamp,
+      },
+      ...validFriends.map((f) => ({
+        eventId,
+        participantName: f.name.trim(),
+        position: f.position || 'Guard',
+        assignedTeam,
+        joinedAt: timestamp,
+      })),
+    ];
+
+    await db.collection('joined').insertMany(entriesToInsert);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        assignedTeam,
+        squadSize: totalSquadSize,
+        joined: entriesToInsert[0],
+      }),
+      { status: 201, headers: { 'Content-Type': 'application/json' } }
+    );
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ error: 'Unable to save registration.' }), {

@@ -490,12 +490,20 @@ export default function AdminPage() {
                           {/* Expanded Roster & Fixtures Bracket View */}
                           {isExpanded && (
                             <div className="mt-6 border-t border-zinc-200 pt-6 space-y-6">
-                              {/* Grouped Team Roster View */}
-                              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 space-y-4">
-                                <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
-                                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900">
-                                    Team Squad Rosters ({registeredPlayers.length} Total Players)
-                                  </h4>
+                              {/* 4th Live Team & Player Capacity Breakdown Summary Block */}
+                              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 space-y-5">
+                                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-3">
+                                  <div>
+                                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-600">
+                                      Section 4 • Live Team & Player Capacity Breakdown
+                                    </span>
+                                    <h4 className="text-lg font-bold text-zinc-900">
+                                      Squad Rosters & Current Player Allocations ({registeredPlayers.length} Total Players)
+                                    </h4>
+                                  </div>
+                                  <span className="rounded-full bg-red-600 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white shadow-sm">
+                                    {registeredPlayers.length} / {Math.max(2, Number(event.teamCount || event.teams) || 4) * getPlayersPerTeam(event.format || '3v3')} Max Players
+                                  </span>
                                 </div>
 
                                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -505,34 +513,54 @@ export default function AdminPage() {
                                       const teamName = `Team ${i + 1}`;
                                       const teamPlayers = registeredPlayers.filter((p) => p.assignedTeam === teamName);
                                       const playersPerTeam = getPlayersPerTeam(event.format || '3v3');
+                                      const isTeamFull = teamPlayers.length >= playersPerTeam;
 
                                       return (
                                         <div
                                           key={teamName}
-                                          className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm space-y-2"
+                                          className={`rounded-2xl border p-4 shadow-sm space-y-3 transition ${
+                                            isTeamFull
+                                              ? 'border-emerald-200 bg-emerald-50/50'
+                                              : teamPlayers.length > 0
+                                              ? 'border-amber-200 bg-amber-50/30'
+                                              : 'border-zinc-200 bg-white'
+                                          }`}
                                         >
                                           <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                                            <span className="font-extrabold text-xs text-red-600 uppercase tracking-wider">
+                                            <span className="font-black text-xs text-red-600 uppercase tracking-wider">
                                               {teamName}
                                             </span>
-                                            <span className="text-[9px] font-bold rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600">
-                                              {teamPlayers.length}/{playersPerTeam} Players
+                                            <span
+                                              className={`text-[9px] font-bold rounded-full px-2 py-0.5 uppercase tracking-wider ${
+                                                isTeamFull
+                                                  ? 'bg-emerald-200 text-emerald-800'
+                                                  : teamPlayers.length > 0
+                                                  ? 'bg-amber-200 text-amber-800'
+                                                  : 'bg-zinc-100 text-zinc-600'
+                                              }`}
+                                            >
+                                              {isTeamFull
+                                                ? `Full (${teamPlayers.length}/${playersPerTeam})`
+                                                : `${teamPlayers.length}/${playersPerTeam} (${playersPerTeam - teamPlayers.length} Open)`}
                                             </span>
                                           </div>
 
                                           <div className="space-y-1.5 pt-1">
                                             {teamPlayers.length === 0 ? (
-                                              <p className="text-[11px] italic text-zinc-400">No players assigned yet</p>
+                                              <div className="rounded-xl border border-dashed border-zinc-200 p-2.5 text-center text-[11px] italic text-zinc-400">
+                                                No players assigned yet
+                                              </div>
                                             ) : (
                                               teamPlayers.map((player, pIdx) => (
                                                 <div
                                                   key={pIdx}
-                                                  className="flex items-center justify-between text-xs bg-zinc-50 p-2 rounded-xl border border-zinc-100"
+                                                  className="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-zinc-200 shadow-2xs"
                                                 >
-                                                  <span className="font-semibold text-zinc-900">
-                                                    {player.participantName}
-                                                  </span>
-                                                  <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">
+                                                  <div className="space-y-0.5">
+                                                    <p className="font-bold text-zinc-900">{player.participantName}</p>
+                                                    <p className="text-[9px] font-medium text-zinc-500">Player #{pIdx + 1}</p>
+                                                  </div>
+                                                  <span className="text-[9px] font-extrabold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
                                                     {player.position || 'Guard'}
                                                   </span>
                                                 </div>

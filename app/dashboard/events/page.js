@@ -8,7 +8,6 @@ import {
   Card,
   Button,
   Select,
-  Input,
   Badge,
   EmptyState,
   Toast,
@@ -43,6 +42,7 @@ export default function EventsPage() {
   const [registeringEvent, setRegisteringEvent] = useState(null);
   const [position, setPosition] = useState('Point Guard (PG)');
   const [playerName, setPlayerName] = useState('');
+  const [friends, setFriends] = useState([]);
   const [submitting, setSubmitting] = useState(false);
 
   const [formatFilter, setFormatFilter] = useState('All');
@@ -51,7 +51,7 @@ export default function EventsPage() {
 
   const showToast = (msg, type = 'success') => {
     setToast({ msg, type });
-    setTimeout(() => setToast(''), 4000);
+    setTimeout(() => setToast(''), 4500);
   };
 
   const openEventDetails = (event) => {
@@ -66,10 +66,32 @@ export default function EventsPage() {
     setRegisteringEvent(event);
     setPlayerName(currentUser?.name || '');
     setPosition('Point Guard (PG)');
+    setFriends([]);
   };
 
   const closeRegisterModal = () => {
     setRegisteringEvent(null);
+    setFriends([]);
+  };
+
+  const handleAddFriend = () => {
+    if (!registeringEvent) return;
+    const maxSquad = getPlayersPerTeam(registeringEvent.format || '3v3');
+    if (1 + friends.length >= maxSquad) {
+      showToast(`Max squad size is ${maxSquad} players for ${registeringEvent.format || '3v3'} format.`, 'error');
+      return;
+    }
+    setFriends([...friends, { name: '', position: 'Shooting Guard (SG)' }]);
+  };
+
+  const handleRemoveFriend = (index) => {
+    setFriends(friends.filter((_, i) => i !== index));
+  };
+
+  const handleFriendChange = (index, field, value) => {
+    const updated = [...friends];
+    updated[index][field] = value;
+    setFriends(updated);
   };
 
   const handleRegisterSubmit = async (e) => {
@@ -78,9 +100,12 @@ export default function EventsPage() {
 
     setSubmitting(true);
     try {
-      const result = await joinEvent(registeringEvent.id, position, playerName);
+      const validFriends = friends.filter((f) => f.name && f.name.trim());
+      const result = await joinEvent(registeringEvent.id, position, playerName, validFriends);
+      
+      const totalCount = 1 + validFriends.length;
       showToast(
-        `✓ Registered as ${position}! You have been assigned to ${result.assignedTeam || 'a squad'}.`
+        `✓ Registered successfully! Assigned to ${result.assignedTeam || 'a squad'} with your squad of ${totalCount} player(s).`
       );
       closeRegisterModal();
     } catch (err) {
@@ -113,7 +138,7 @@ export default function EventsPage() {
       <PageHeader
         label="Basketball Tournaments"
         title="Official Basketball Events & Fixtures"
-        description="Browse official Basketball tournaments, register your position, get randomly assigned to a squad, and view live match brackets."
+        description="Browse official Basketball tournaments, register your squad/friends, get assigned to a team together, and view live match brackets."
         action={<Badge variant="red">Basketball Only</Badge>}
       />
 
@@ -160,6 +185,11 @@ export default function EventsPage() {
                 const maxCapacity = teamCount * playersPerTeam;
                 const isFull = eventJoinedCount >= maxCapacity;
 
+                // Tournament Status Checks (Started / Completed / Closed)
+                const isStarted = event.start && new Date(event.start) < new Date();
+                const isClosed = event.status === 'In Progress' || event.status === 'Completed' || event.status === 'Closed';
+                const registrationBlocked = isStarted || isClosed;
+
                 return (
                   <article
                     key={event.id}
@@ -177,9 +207,17 @@ export default function EventsPage() {
                               ✓ Registered
                             </span>
                           )}
-                          {isFull && !joined && (
+                          {registrationBlocked ? (
+                            <span className="rounded-full bg-amber-100 px-3 py-1 text-[10px] font-bold text-amber-800 uppercase tracking-wider">
+                              Tournament Started
+                            </span>
+                          ) : isFull ? (
                             <span className="rounded-full bg-red-100 px-3 py-1 text-[10px] font-bold text-red-700 uppercase tracking-wider">
                               FULL / Closed
+                            </span>
+                          ) : (
+                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                              Open
                             </span>
                           )}
                           <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold text-zinc-700">
@@ -214,6 +252,13 @@ export default function EventsPage() {
                           >
                             View Fixtures & Squad →
                           </Button>
+                        ) : registrationBlocked ? (
+                          <button
+                            disabled
+                            className="w-full rounded-2xl bg-zinc-100 py-3 text-xs font-bold uppercase tracking-wider text-zinc-400 cursor-not-allowed"
+                          >
+                            Tournament Started (Registration Closed)
+                          </button>
                         ) : isFull ? (
                           <button
                             disabled
@@ -240,17 +285,17 @@ export default function EventsPage() {
         </div>
       </Card>
 
-      {/* Position Selection Registration Modal */}
+      {/* Position Selection & Teammates Registration Modal */}
       {registeringEvent && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl space-y-5">
+          <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-3xl border border-zinc-200 bg-white p-6 shadow-2xl space-y-5">
             <div className="flex items-start justify-between border-b border-zinc-100 pb-3">
               <div>
                 <span className="rounded-full bg-red-600 px-3 py-1 text-[9px] font-extrabold uppercase tracking-widest text-white">
                   {registeringEvent.format || '3v3'} Basketball
                 </span>
                 <h3 className="mt-2 text-xl font-bold text-black">{registeringEvent.name}</h3>
-                <p className="text-xs text-zinc-500">Select your position to be randomly assigned to an open squad.</p>
+                <p className="text-xs text-zinc-500">Register yourself and your friends together to get placed in the SAME team!</p>
               </div>
               <button
                 type="button"
@@ -262,36 +307,105 @@ export default function EventsPage() {
             </div>
 
             <form onSubmit={handleRegisterSubmit} className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Player Name</label>
-                <input
-                  type="text"
-                  required
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  placeholder="Your Name / Gamertag"
-                  className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
-                />
+              {/* Main Player Info */}
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4 space-y-3">
+                <p className="text-xs font-extrabold uppercase tracking-wider text-red-600">Your Details (Player 1)</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="block text-[11px] font-bold text-zinc-700">Your Name</label>
+                    <input
+                      type="text"
+                      required
+                      value={playerName}
+                      onChange={(e) => setPlayerName(e.target.value)}
+                      placeholder="Your Full Name"
+                      className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-1.5 text-xs text-black focus:border-red-500 focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-bold text-zinc-700">Playing Position</label>
+                    <select
+                      value={position}
+                      onChange={(e) => setPosition(e.target.value)}
+                      className="mt-1 w-full rounded-xl border border-zinc-300 px-3 py-1.5 text-xs text-black focus:border-red-500 focus:outline-none"
+                    >
+                      {BASKETBALL_POSITIONS.map((pos) => (
+                        <option key={pos.value} value={pos.value}>
+                          {pos.value}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Playing Position</label>
-                <select
-                  value={position}
-                  onChange={(e) => setPosition(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
-                >
-                  {BASKETBALL_POSITIONS.map((pos) => (
-                    <option key={pos.value} value={pos.value}>
-                      {pos.label}
-                    </option>
-                  ))}
-                </select>
+              {/* Friends / Teammates Section */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold uppercase tracking-wider text-zinc-800">
+                    Add Friends / Teammates (Same Squad)
+                  </span>
+                  <span className="text-[10px] font-semibold text-zinc-500">
+                    Squad Size: {1 + friends.length} / {getPlayersPerTeam(registeringEvent.format || '3v3')} Max
+                  </span>
+                </div>
+
+                {friends.map((friend, idx) => (
+                  <div key={idx} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-3 space-y-2 relative">
+                    <div className="flex items-center justify-between border-b border-zinc-200 pb-1">
+                      <span className="text-[10px] font-bold text-red-600">Teammate #{idx + 2}</span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFriend(idx)}
+                        className="text-[10px] font-bold text-zinc-400 hover:text-red-600"
+                      >
+                        Remove ✕
+                      </button>
+                    </div>
+
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Friend Name"
+                          value={friend.name}
+                          onChange={(e) => handleFriendChange(idx, 'name', e.target.value)}
+                          className="w-full rounded-lg border border-zinc-300 px-2.5 py-1 text-xs text-black focus:border-red-500 focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <select
+                          value={friend.position}
+                          onChange={(e) => handleFriendChange(idx, 'position', e.target.value)}
+                          className="w-full rounded-lg border border-zinc-300 px-2.5 py-1 text-xs text-black focus:border-red-500 focus:outline-none"
+                        >
+                          {BASKETBALL_POSITIONS.map((pos) => (
+                            <option key={pos.value} value={pos.value}>
+                              {pos.value}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+
+                {1 + friends.length < getPlayersPerTeam(registeringEvent.format || '3v3') && (
+                  <button
+                    type="button"
+                    onClick={handleAddFriend}
+                    className="w-full rounded-2xl border border-dashed border-red-300 bg-red-50/50 py-2.5 text-xs font-bold uppercase tracking-wider text-red-600 hover:bg-red-100 transition"
+                  >
+                    + Add Teammate / Friend to Same Team
+                  </button>
+                )}
               </div>
 
               <div className="rounded-2xl border border-red-100 bg-red-50/50 p-3 text-xs text-red-700 space-y-1">
-                <p className="font-bold">🎲 Random Team Assignment</p>
-                <p>You will be randomly assigned to an open Team (Team 1, Team 2, etc.) for this tournament.</p>
+                <p className="font-bold">🤝 Group Team Placement</p>
+                <p>All {1 + friends.length} players in your group will be assigned together into the SAME Team!</p>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-2">
@@ -307,7 +421,7 @@ export default function EventsPage() {
                   disabled={submitting}
                   className="rounded-xl bg-red-600 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow hover:bg-red-500 disabled:opacity-50"
                 >
-                  {submitting ? 'Registering...' : 'Confirm Registration'}
+                  {submitting ? 'Registering Squad...' : `Confirm Registration (${1 + friends.length} Players)`}
                 </button>
               </div>
             </form>
@@ -342,12 +456,20 @@ export default function EventsPage() {
             </div>
 
             <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-6 space-y-6">
-              {/* Grouped Team Roster View */}
-              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-5 space-y-4">
-                <div className="flex items-center justify-between border-b border-zinc-200 pb-2">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-zinc-900">
-                    Team Squad Rosters ({joinedEvents.filter((j) => j.eventId === selectedEvent.id).length} Registered Players)
-                  </h4>
+              {/* 4th Live Team & Player Capacity Breakdown Summary Block */}
+              <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-6 space-y-5">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-zinc-200 pb-3">
+                  <div>
+                    <span className="text-[10px] font-extrabold uppercase tracking-widest text-red-600">
+                      Section 4 • Live Team & Player Capacity Breakdown
+                    </span>
+                    <h4 className="text-lg font-bold text-zinc-900">
+                      Squad Rosters & Current Player Allocations ({joinedEvents.filter((j) => j.eventId === selectedEvent.id).length} Total Players)
+                    </h4>
+                  </div>
+                  <span className="rounded-full bg-red-600 px-3.5 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white shadow-sm">
+                    {joinedEvents.filter((j) => j.eventId === selectedEvent.id).length} / {Math.max(2, Number(selectedEvent.teamCount || selectedEvent.teams) || 4) * getPlayersPerTeam(selectedEvent.format || '3v3')} Max Players
+                  </span>
                 </div>
 
                 <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
@@ -359,34 +481,54 @@ export default function EventsPage() {
                         (j) => j.eventId === selectedEvent.id && j.assignedTeam === teamName
                       );
                       const playersPerTeam = getPlayersPerTeam(selectedEvent.format || '3v3');
+                      const isTeamFull = teamPlayers.length >= playersPerTeam;
 
                       return (
                         <div
                           key={teamName}
-                          className="rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm space-y-2"
+                          className={`rounded-2xl border p-4 shadow-sm space-y-3 transition ${
+                            isTeamFull
+                              ? 'border-emerald-200 bg-emerald-50/50'
+                              : teamPlayers.length > 0
+                              ? 'border-amber-200 bg-amber-50/30'
+                              : 'border-zinc-200 bg-white'
+                          }`}
                         >
                           <div className="flex items-center justify-between border-b border-zinc-100 pb-2">
-                            <span className="font-extrabold text-xs text-red-600 uppercase tracking-wider">
+                            <span className="font-black text-xs text-red-600 uppercase tracking-wider">
                               {teamName}
                             </span>
-                            <span className="text-[9px] font-bold rounded-full bg-zinc-100 px-2 py-0.5 text-zinc-600">
-                              {teamPlayers.length}/{playersPerTeam} Players
+                            <span
+                              className={`text-[9px] font-bold rounded-full px-2 py-0.5 uppercase tracking-wider ${
+                                isTeamFull
+                                  ? 'bg-emerald-200 text-emerald-800'
+                                  : teamPlayers.length > 0
+                                  ? 'bg-amber-200 text-amber-800'
+                                  : 'bg-zinc-100 text-zinc-600'
+                              }`}
+                            >
+                              {isTeamFull
+                                ? `Full (${teamPlayers.length}/${playersPerTeam})`
+                                : `${teamPlayers.length}/${playersPerTeam} (${playersPerTeam - teamPlayers.length} Open)`}
                             </span>
                           </div>
 
                           <div className="space-y-1.5 pt-1">
                             {teamPlayers.length === 0 ? (
-                              <p className="text-[11px] italic text-zinc-400">No players assigned yet</p>
+                              <div className="rounded-xl border border-dashed border-zinc-200 p-2.5 text-center text-[11px] italic text-zinc-400">
+                                No players assigned yet
+                              </div>
                             ) : (
                               teamPlayers.map((player, pIdx) => (
                                 <div
                                   key={pIdx}
-                                  className="flex items-center justify-between text-xs bg-zinc-50 p-2 rounded-xl border border-zinc-100"
+                                  className="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-zinc-200 shadow-2xs"
                                 >
-                                  <span className="font-semibold text-zinc-900">
-                                    {player.participantName}
-                                  </span>
-                                  <span className="text-[9px] font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded-md">
+                                  <div className="space-y-0.5">
+                                    <p className="font-bold text-zinc-900">{player.participantName}</p>
+                                    <p className="text-[9px] font-medium text-zinc-500">Player #{pIdx + 1}</p>
+                                  </div>
+                                  <span className="text-[9px] font-extrabold text-red-600 bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
                                     {player.position || 'Guard'}
                                   </span>
                                 </div>
