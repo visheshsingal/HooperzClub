@@ -107,6 +107,9 @@ export default function DashboardLayout({ children }) {
             <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
           )}
 
+
+
+
           <aside
             className={`fixed inset-y-0 left-0 z-50 w-60 transform border-r border-zinc-800 bg-[#09090b] text-white transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-60 lg:flex-shrink-0 lg:translate-x-0 ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
