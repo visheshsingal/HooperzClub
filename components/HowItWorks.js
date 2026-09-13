@@ -35,7 +35,7 @@ export default function HowItWorks() {
       <div className="mx-auto max-w-6xl px-5 md:px-8 lg:px-12">
         <div className="text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600">The Gameplan</p>
-          <h2 className="mt-4 text-4xl font-black tracking-[-0.07em] md:text-5xl lg:text-6xl">
+          <h2 className="mt-4 font-cursive text-5xl text-black md:text-6xl lg:text-7xl font-normal">
             How to get on the hardwood.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-base text-black/65">

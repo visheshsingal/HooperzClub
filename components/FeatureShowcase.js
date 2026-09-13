@@ -86,7 +86,7 @@ export default function FeatureShowcase() {
         <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-end">
           <div className="max-w-2xl">
             <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600">Built For The Game</p>
-            <h2 className="mt-4 text-4xl font-black tracking-[-0.07em] text-black md:text-5xl lg:text-6xl">
+            <h2 className="mt-4 font-cursive text-5xl text-black md:text-6xl lg:text-7xl font-normal">
               Everything your basketball game demands.
             </h2>
           </div>

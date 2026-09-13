@@ -81,7 +81,7 @@ export default function FeaturedTournaments() {
               <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
               Sanctioned Tournaments
             </div>
-            <h2 className="mt-4 text-4xl font-black tracking-[-0.07em] text-white md:text-5xl lg:text-6xl">
+            <h2 className="mt-4 font-cursive text-5xl text-white md:text-6xl lg:text-7xl font-normal">
               The Tournament Circuit.
             </h2>
           </div>

@@ -42,7 +42,7 @@ export default function Testimonials() {
             <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-white/80">
               Community Voices
             </div>
-            <h2 className="mt-4 text-4xl font-black tracking-[-0.07em] text-white md:text-5xl lg:text-6xl">
+            <h2 className="mt-4 font-cursive text-5xl text-white md:text-6xl lg:text-7xl font-normal">
               Respect the hustle.
             </h2>
           </div>

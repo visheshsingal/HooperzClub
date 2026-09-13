@@ -13,7 +13,7 @@ export default function CallToAction() {
           Get On The Floor
         </div>
 
-        <h2 className="mx-auto mt-6 max-w-4xl text-5xl font-black tracking-[-0.08em] text-white md:text-7xl lg:text-8xl">
+        <h2 className="mx-auto mt-6 max-w-4xl font-cursive text-6xl font-normal text-white md:text-8xl lg:text-9xl">
           Own your game. <br />
           <span className="text-red-500">Claim your court.</span>
         </h2>

@@ -8,6 +8,7 @@
   --muted: #666666;
   --surface: #f5f5f5;
   --border: rgba(17, 17, 17, 0.1);
+  --font-impact: Impact, Haettenschweiler, "Arial Narrow Bold", "Franklin Gothic Bold", sans-serif;
 }
 
 @theme inline {
@@ -15,7 +16,9 @@
   --color-foreground: var(--foreground);
   --color-accent: var(--accent);
   --color-surface: var(--surface);
-  --font-sans: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-poppins), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-hero: var(--font-impact);
+  --font-cursive: var(--font-playball), "Brush Script MT", cursive;
 }
 
 * {
@@ -32,7 +35,22 @@ body {
   min-height: 100vh;
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--font-poppins), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* Custom font utilities */
+.font-hero {
+  font-family: var(--font-impact);
+}
+
+.font-cursive,
+.font-heading-cursive {
+  font-family: var(--font-playball), "Brush Script MT", cursive;
+}
+
+.font-body,
+.font-poppins {
+  font-family: var(--font-poppins), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 img,

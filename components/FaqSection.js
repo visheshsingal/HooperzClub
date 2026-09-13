@@ -34,7 +34,7 @@ export default function FaqSection() {
       <div className="mx-auto max-w-4xl px-5 md:px-8">
         <div className="text-center">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600">Got Questions?</p>
-          <h2 className="mt-4 text-4xl font-black tracking-[-0.07em] md:text-5xl">
+          <h2 className="mt-4 font-cursive text-5xl text-black md:text-6xl font-normal">
             Court FAQs & Rules.
           </h2>
           <p className="mt-3 text-sm text-black/65 md:text-base">

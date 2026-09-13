@@ -21,7 +21,7 @@ export default function AboutUs() {
       <div className="mx-auto max-w-6xl px-5 md:px-8 lg:px-12">
         <div className="mb-12 max-w-2xl">
           <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-red-600">Built for hoops</p>
-          <h2 className="mt-4 text-4xl font-black tracking-[-0.07em] text-black md:text-5xl">
+          <h2 className="mt-4 font-cursive text-5xl text-black md:text-6xl font-normal">
             Basketball is the whole game.
           </h2>
         </div>

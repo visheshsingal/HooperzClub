@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 export default function Hero() {
   return (
@@ -18,11 +18,11 @@ export default function Hero() {
 
       <div className="relative mx-auto flex min-h-[840px] max-w-6xl items-center px-5 pb-20 pt-32 md:px-8 lg:px-12">
         <div className="max-w-2xl">
-          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.28em] text-white/80 backdrop-blur-[2px]">
+          <div className="mb-6 inline-flex items-center gap-3 rounded-full border border-white/15 bg-white/5 px-4 py-1.5 text-base font-cursive text-red-400 backdrop-blur-[2px]">
             Basketball culture
           </div>
 
-          <h1 className="text-5xl font-black leading-[0.9] tracking-[-0.08em] text-white md:text-7xl lg:text-[6rem]">
+          <h1 className="font-hero text-6xl uppercase tracking-wide text-white md:text-8xl lg:text-[7rem] leading-[0.92]">
             Play hard.
             <span className="mt-2 block text-red-500">Own the court.</span>
           </h1>
