@@ -337,8 +337,12 @@ export default function AdminPage() {
                             onChange={(e) => setNewEvent({ ...newEvent, teamCount: Number(e.target.value) })}
                             className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
                           >
-                            <option value={4}>4 Teams / Players</option>
-                            <option value={8}>8 Teams / Players</option>
+                            <option value={2}>2 Teams / Players (Direct Final)</option>
+                            <option value={3}>3 Teams / Players (Semi + Final)</option>
+                            <option value={4}>4 Teams / Players (Semifinals + Final)</option>
+                            <option value={6}>6 Teams / Players (Quarterfinals + Final)</option>
+                            <option value={8}>8 Teams / Players (Quarterfinals → Semis → Final)</option>
+                            <option value={12}>12 Teams / Players</option>
                             <option value={16}>16 Teams / Players</option>
                             <option value={32}>32 Teams / Players</option>
                           </select>
