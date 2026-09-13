@@ -97,13 +97,13 @@ export default function AdminPage() {
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex h-14 items-center border-b border-zinc-800 px-3">
-            <div className="flex h-7 w-[92px] items-center overflow-hidden">
-              <BrandLogo className="h-full w-full object-contain" />
+          <div className="flex h-16 items-center border-b border-zinc-800 px-4">
+            <div className="flex h-10 items-center justify-start overflow-hidden">
+              <BrandLogo className="h-9 w-auto md:h-10 max-w-[160px]" />
             </div>
           </div>
 
-          <nav className="flex h-[calc(100vh-3.5rem)] flex-col p-3">
+          <nav className="flex h-[calc(100vh-4rem)] flex-col p-3">
             <p className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-400">Welcome back.</p>
             <div className="space-y-1">
               {adminNav.map((item) => {

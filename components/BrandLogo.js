@@ -7,15 +7,7 @@ export default function BrandLogo({ className = '' }) {
     <img
       src={LOGO_URL}
       alt="Hooperzclub logo"
-      className={className}
-      style={{
-        objectFit: 'contain',
-        width: '100%',
-        height: '100%',
-        maxWidth: '100%',
-        maxHeight: '100%',
-        display: 'block',
-      }}
+      className={`object-contain block ${className}`}
     />
   );
 }
