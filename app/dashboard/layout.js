@@ -109,6 +109,8 @@ export default function DashboardLayout({ children }) {
     );
   }
 
+
+  
   return (
     <DashboardProvider user={currentUser}>
       <div className="min-h-screen bg-[#f5f5f5] text-zinc-900">
