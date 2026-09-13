@@ -3,7 +3,14 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Hero from "../components/Hero";
+import StatsBanner from "../components/StatsBanner";
 import AboutUs from "../components/AboutUs";
+import FeatureShowcase from "../components/FeatureShowcase";
+import FeaturedTournaments from "../components/FeaturedTournaments";
+import HowItWorks from "../components/HowItWorks";
+import Testimonials from "../components/Testimonials";
+import FaqSection from "../components/FaqSection";
+import CallToAction from "../components/CallToAction";
 
 function HomeRedirect() {
   const router = useRouter();
@@ -24,7 +31,14 @@ export default function Home() {
       <HomeRedirect />
       <main className="flex-grow">
         <Hero />
+        <StatsBanner />
         <AboutUs />
+        <FeatureShowcase />
+        <FeaturedTournaments />
+        <HowItWorks />
+        <Testimonials />
+        <FaqSection />
+        <CallToAction />
       </main>
     </div>
   );

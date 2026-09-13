@@ -30,9 +30,9 @@ export default function Footer() {
       <div className="mx-auto max-w-6xl px-5 py-12 md:px-8 lg:px-12">
         <div className="grid gap-10 md:grid-cols-[1.2fr_0.8fr_0.8fr_0.8fr]">
           <div>
-            <div className="flex items-center gap-2">
-              <div className="flex h-16 items-center justify-center overflow-hidden">
-                <BrandLogo className="h-full w-auto max-w-[220px]" />
+            <div className="flex items-center">
+              <div className="flex h-16 w-64 items-center justify-start overflow-hidden">
+                <BrandLogo className="h-11 w-auto max-w-[220px]" />
               </div>
             </div>
             <p className="mt-4 max-w-xs text-sm leading-6 text-white/65">
