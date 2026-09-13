@@ -11,10 +11,6 @@ export default function LocationAutocomplete({ label, value, onChange, placehold
   const debounceRef = useRef(null);
 
   useEffect(() => {
-    setQuery(value || '');
-  }, [value]);
-
-  useEffect(() => {
     const handleClickOutside = (e) => {
       if (containerRef.current && !containerRef.current.contains(e.target)) {
         setIsOpen(false);

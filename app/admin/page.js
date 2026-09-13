@@ -16,6 +16,7 @@ function getPlayersPerTeam(format) {
 const adminNav = [
   { id: 'dashboard', label: 'Dashboard' },
   { id: 'events', label: 'Basketball Events' },
+  { id: 'fixtures', label: 'Fixtures' },
   { id: 'users', label: 'Users' },
 ];
 
@@ -28,6 +29,12 @@ export default function AdminPage() {
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [expandedEventId, setExpandedEventId] = useState(null);
+  const [selectedFixtureEventId, setSelectedFixtureEventId] = useState('');
+  const [newFixture, setNewFixture] = useState({
+    round: 'Quarterfinal',
+    teamA: '',
+    teamB: '',
+  });
 
   // Form State for creating Basketball Event
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -181,6 +188,72 @@ export default function AdminPage() {
       setEvents((prev) =>
         prev.map((ev) => (ev.id === eventId ? { ...ev, fixtures: body.fixtures } : ev))
       );
+    }
+  };
+
+  const selectedFixtureEvent = events.find((event) => event.id === selectedFixtureEventId) || events[0] || null;
+
+  const handleCreateFixture = async () => {
+    if (!selectedFixtureEvent || !newFixture.teamA.trim() || !newFixture.teamB.trim()) return;
+    const token = localStorage.getItem('hooperz_token');
+    const response = await fetch('/api/admin/events/fixtures', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        eventId: selectedFixtureEvent.id,
+        action: 'create',
+        round: newFixture.round,
+        teamA: newFixture.teamA.trim(),
+        teamB: newFixture.teamB.trim(),
+      }),
+    });
+
+    if (response.ok) {
+      const body = await response.json();
+      setEvents((prev) =>
+        prev.map((event) => (event.id === selectedFixtureEvent.id ? { ...event, fixtures: body.fixtures } : event))
+      );
+      setNewFixture({ round: 'Quarterfinal', teamA: '', teamB: '' });
+    }
+  };
+
+  const handleMovePlayer = async (entryId, assignedTeam) => {
+    if (!entryId || !assignedTeam) return;
+    const token = localStorage.getItem('hooperz_token');
+    const response = await fetch('/api/dashboard/joined', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ action: 'reassign', entryId, assignedTeam }),
+    });
+
+    if (response.ok) {
+      const updated = await response.json();
+      setJoinedEntries((prev) =>
+        prev.map((entry) => (entry._id === entryId ? { ...entry, assignedTeam: updated.assignedTeam || assignedTeam } : entry))
+      );
+    }
+  };
+
+  const handleRemovePlayer = async (entryId, participantName) => {
+    if (!entryId || !confirm(`Remove ${participantName || 'this player'} from this event?`)) return;
+    const token = localStorage.getItem('hooperz_token');
+    const response = await fetch('/api/dashboard/joined', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ entryId }),
+    });
+
+    if (response.ok) {
+      setJoinedEntries((prev) => prev.filter((entry) => entry._id !== entryId));
     }
   };
 
@@ -455,7 +528,7 @@ export default function AdminPage() {
                 <div className="space-y-4">
                   {events.length === 0 ? (
                     <div className="rounded-3xl border border-zinc-200 bg-white p-8 text-center text-zinc-500">
-                      No Basketball events found. Click "+ Create Basketball Event" above to create your first event!
+                      No Basketball events found. Click the create event button above to add your first tournament.
                     </div>
                   ) : (
                     events.map((event) => {
@@ -603,6 +676,145 @@ export default function AdminPage() {
                   )}
                 </div>
               </div>
+            )}
+
+            {activeTab === 'fixtures' && (
+              <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-red-600">Fixtures</p>
+                    <h2 className="mt-2 text-2xl font-bold text-black">Edit fixtures and team squads</h2>
+                  </div>
+                </div>
+
+                <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+                  <div className="space-y-5">
+                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                      <label className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-600">Select event</label>
+                      <select
+                        value={selectedFixtureEvent?.id || ''}
+                        onChange={(e) => setSelectedFixtureEventId(e.target.value)}
+                        className="mt-2 w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                      >
+                        {events.map((event) => (
+                          <option key={event.id} value={event.id}>{event.name}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                      <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-700">Create fixture manually</h3>
+                      <div className="mt-4 grid gap-3 md:grid-cols-3">
+                        <input
+                          type="text"
+                          value={newFixture.round}
+                          onChange={(e) => setNewFixture({ ...newFixture, round: e.target.value })}
+                          placeholder="Round name"
+                          className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                        />
+                        <input
+                          type="text"
+                          value={newFixture.teamA}
+                          onChange={(e) => setNewFixture({ ...newFixture, teamA: e.target.value })}
+                          placeholder="Team A"
+                          className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                        />
+                        <input
+                          type="text"
+                          value={newFixture.teamB}
+                          onChange={(e) => setNewFixture({ ...newFixture, teamB: e.target.value })}
+                          placeholder="Team B"
+                          className="rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm text-black"
+                        />
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={handleCreateFixture}
+                          className="rounded-full bg-red-600 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.2em] text-white"
+                        >
+                          Add fixture
+                        </button>
+                      </div>
+                    </div>
+
+                    {selectedFixtureEvent && (
+                      <div className="rounded-2xl border border-zinc-200 bg-white p-4">
+                        <FixturesBracket
+                          fixtures={selectedFixtureEvent.fixtures || []}
+                          isAdmin={true}
+                          onUpdateMatch={(matchId, scoreA, scoreB, winner) =>
+                            handleUpdateMatchScore(selectedFixtureEvent.id, matchId, scoreA, scoreB, winner)
+                          }
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                      <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-zinc-700">Player team control</h3>
+                      {selectedFixtureEvent ? (
+                        <div className="mt-4 space-y-3">
+                          {Array.from({ length: Math.max(2, Number(selectedFixtureEvent.teamCount || selectedFixtureEvent.teams) || 4) }, (_, i) => {
+                            const teamName = `Team ${i + 1}`;
+                            const eventPlayers = joinedEntries.filter((entry) => entry.eventId === selectedFixtureEvent.id && entry.assignedTeam === teamName);
+
+                            return (
+                              <div key={teamName} className="rounded-xl border border-zinc-200 bg-white p-3">
+                                <div className="mb-2 flex items-center justify-between">
+                                  <span className="text-xs font-bold uppercase tracking-[0.2em] text-red-600">{teamName}</span>
+                                  <span className="text-[10px] text-zinc-500">{eventPlayers.length} players</span>
+                                </div>
+
+                                {eventPlayers.length === 0 ? (
+                                  <p className="text-xs italic text-zinc-400">No players assigned</p>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {eventPlayers.map((player) => (
+                                      <div key={player._id} className="rounded-xl border border-zinc-200 bg-zinc-50 p-2">
+                                        <div className="flex items-center justify-between gap-2">
+                                          <div>
+                                            <p className="text-sm font-semibold text-black">{player.participantName}</p>
+                                            <p className="text-[10px] text-zinc-500">{player.position || 'Guard'}</p>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => handleRemovePlayer(player._id, player.participantName)}
+                                            className="rounded-lg border border-red-200 bg-red-50 px-2 py-1 text-[10px] font-semibold text-red-600"
+                                          >
+                                            Remove
+                                          </button>
+                                        </div>
+
+                                        <div className="mt-2 flex items-center gap-2">
+                                          <select
+                                            value={player.assignedTeam || teamName}
+                                            onChange={(e) => handleMovePlayer(player._id, e.target.value)}
+                                            className="w-full rounded-lg border border-zinc-300 bg-white px-2 py-1.5 text-xs text-black"
+                                          >
+                                            {Array.from({ length: Math.max(2, Number(selectedFixtureEvent.teamCount || selectedFixtureEvent.teams) || 4) }, (_, teamIndex) => (
+                                              <option key={teamIndex} value={`Team ${teamIndex + 1}`}>
+                                                Team {teamIndex + 1}
+                                              </option>
+                                            ))}
+                                          </select>
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <p className="mt-3 text-sm text-zinc-500">No event selected.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </section>
             )}
 
             {activeTab === 'users' && (

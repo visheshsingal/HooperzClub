@@ -11,7 +11,7 @@ export default function ConnectPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState('');
-  const [searchLocation, setSearchLocation] = useState('');
+  const [searchLocation, setSearchLocation] = useState(currentUser?.profile?.location || '');
 
   useEffect(() => {
     const loadUsers = async () => {
@@ -29,12 +29,6 @@ export default function ConnectPage() {
 
     loadUsers();
   }, []);
-
-  useEffect(() => {
-    if (currentUser?.profile?.location) {
-      setSearchLocation(currentUser.profile.location);
-    }
-  }, [currentUser]);
 
   const nearbyUsers = useMemo(() => {
     const query = (searchLocation || '').trim().toLowerCase();

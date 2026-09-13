@@ -1,4 +1,5 @@
 import clientPromise from '../../../../lib/mongodb.js';
+import { ObjectId } from 'mongodb';
 
 function getPlayersPerTeam(format) {
   if (format === '1v1') return 1;
@@ -145,13 +146,20 @@ export async function POST(request) {
   }
 }
 
-export async function DELETE(request) {
+export async function PATCH(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const eventId = searchParams.get('eventId');
+    const body = await request.json().catch(() => ({}));
+    const { action, entryId, assignedTeam } = body;
 
-    if (!eventId) {
-      return new Response(JSON.stringify({ error: 'eventId is required.' }), {
+    if (!entryId || action !== 'reassign') {
+      return new Response(JSON.stringify({ error: 'entryId and action are required.' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    if (!assignedTeam) {
+      return new Response(JSON.stringify({ error: 'assignedTeam is required.' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -159,6 +167,56 @@ export async function DELETE(request) {
 
     const client = await clientPromise;
     const db = client.db('hooperzclub');
+    const result = await db.collection('joined').updateOne(
+      { _id: new ObjectId(entryId) },
+      { $set: { assignedTeam: assignedTeam.trim() || assignedTeam } }
+    );
+
+    if (result.matchedCount === 0) {
+      return new Response(JSON.stringify({ error: 'Joined entry not found.' }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    return new Response(JSON.stringify({ success: true, assignedTeam }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ error: 'Unable to update team assignment.' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+}
+
+export async function DELETE(request) {
+  try {
+    const body = await request.json().catch(() => ({}));
+    const { searchParams } = new URL(request.url);
+    const eventId = body.eventId || searchParams.get('eventId');
+    const entryId = body.entryId || searchParams.get('entryId');
+
+    if (!eventId && !entryId) {
+      return new Response(JSON.stringify({ error: 'eventId or entryId is required.' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const client = await clientPromise;
+    const db = client.db('hooperzclub');
+
+    if (entryId) {
+      await db.collection('joined').deleteOne({ _id: new ObjectId(entryId) });
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
     const latest = await db.collection('joined').find({ eventId }).sort({ joinedAt: -1 }).limit(1).toArray();
 
     if (latest.length === 0) {

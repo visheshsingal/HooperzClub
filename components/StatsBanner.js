@@ -45,7 +45,7 @@ export default function StatsBanner() {
               className="relative rounded-2xl border border-white/10 bg-white/[0.03] p-5 transition duration-300 hover:border-red-500/30 hover:bg-white/[0.05]"
             >
               <div className="text-[10px] font-bold uppercase tracking-[0.25em] text-red-400">
-                0{idx + 1} // Metric
+                0{idx + 1} <span className="text-white/60">Metric</span>
               </div>
               <div className="mt-2 text-3xl font-black tracking-tight text-white md:text-4xl lg:text-5xl">
                 {stat.value}

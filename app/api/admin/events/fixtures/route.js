@@ -17,10 +17,11 @@ export async function POST(request) {
   }
 
   try {
-    const { eventId, matchId, scoreA, scoreB, winner } = await request.json();
+    const body = await request.json();
+    const { eventId, matchId, scoreA, scoreB, winner, action, round, teamA, teamB } = body;
 
-    if (!eventId || !matchId) {
-      return new Response(JSON.stringify({ error: 'eventId and matchId are required.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    if (!eventId) {
+      return new Response(JSON.stringify({ error: 'eventId is required.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
 
     const client = await clientPromise;
@@ -31,7 +32,34 @@ export async function POST(request) {
       return new Response(JSON.stringify({ error: 'Event not found.' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const fixtures = event.fixtures || [];
+    const fixtures = Array.isArray(event.fixtures) ? [...event.fixtures] : [];
+
+    if (action === 'create') {
+      if (!teamA || !teamB) {
+        return new Response(JSON.stringify({ error: 'Both teams are required to create a fixture.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+      }
+
+      const newMatch = {
+        id: `match_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+        round: round || 'Quarterfinal',
+        teamA: teamA.trim(),
+        teamB: teamB.trim(),
+        scoreA: 0,
+        scoreB: 0,
+        winner: '',
+        status: 'Scheduled',
+        matchNumber: fixtures.length + 1,
+      };
+
+      fixtures.push(newMatch);
+      await db.collection('events').updateOne({ id: eventId }, { $set: { fixtures } });
+      return new Response(JSON.stringify({ success: true, fixtures }), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (!matchId) {
+      return new Response(JSON.stringify({ error: 'matchId is required.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+
     const matchIndex = fixtures.findIndex((m) => m.id === matchId);
 
     if (matchIndex === -1) {
@@ -44,7 +72,6 @@ export async function POST(request) {
     targetMatch.winner = winner || (targetMatch.scoreA > targetMatch.scoreB ? targetMatch.teamA : targetMatch.teamB);
     targetMatch.status = 'Completed';
 
-    // Advance winner to next match if applicable
     if (targetMatch.nextMatchId && targetMatch.nextMatchSlot && targetMatch.winner) {
       const nextMatch = fixtures.find((m) => m.id === targetMatch.nextMatchId);
       if (nextMatch) {

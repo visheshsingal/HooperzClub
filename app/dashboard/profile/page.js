@@ -7,7 +7,7 @@ import LocationAutocomplete from '../../../components/dashboard/LocationAutocomp
 
 export default function ProfilePage() {
   const { currentUser, updateCurrentUser } = useDashboard();
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => ({
     name: currentUser?.name || '',
     location: currentUser?.profile?.location || '',
     sport: currentUser?.profile?.sport || 'Football',
@@ -15,21 +15,9 @@ export default function ProfilePage() {
     whatsapp: currentUser?.profile?.whatsapp || '',
     instagram: currentUser?.profile?.instagram || '',
     telegram: currentUser?.profile?.telegram || '',
-  });
+  }));
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState('');
-
-  useEffect(() => {
-    setForm({
-      name: currentUser?.name || '',
-      location: currentUser?.profile?.location || '',
-      sport: currentUser?.profile?.sport || 'Football',
-      bio: currentUser?.profile?.bio || '',
-      whatsapp: currentUser?.profile?.whatsapp || '',
-      instagram: currentUser?.profile?.instagram || '',
-      telegram: currentUser?.profile?.telegram || '',
-    });
-  }, [currentUser]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;

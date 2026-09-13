@@ -9,11 +9,7 @@ export function DashboardProvider({ children, user }) {
   const [events, setEvents] = useState([]);
   const [registeredTeams, setRegisteredTeams] = useState([]);
   const [joinedEvents, setJoinedEvents] = useState([]);
-  const [currentUser, setCurrentUser] = useState(user || null);
-
-  useEffect(() => {
-    setCurrentUser(user || null);
-  }, [user]);
+  const [currentUser, setCurrentUser] = useState(() => user || null);
 
   useEffect(() => {
     const loadData = async () => {
