@@ -127,10 +127,14 @@ export function DashboardProvider({ children, user }) {
   };
 
   const joinEvent = async (eventId, team) => {
+    const payload = team
+      ? { eventId, teamId: team._id, teamName: team.name, teamSport: team.sport }
+      : { eventId, participantName: currentUser?.name || 'Player' };
+
     const response = await fetch(`${apiBase}/joined`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ eventId, teamId: team._id, teamName: team.name, teamSport: team.sport }),
+      body: JSON.stringify(payload),
     });
 
     if (!response.ok) {

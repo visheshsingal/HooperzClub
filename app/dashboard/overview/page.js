@@ -15,18 +15,11 @@ import {
 } from '../../../components/dashboard/ui';
 
 export default function OverviewPage() {
-  const { events, registeredTeams, joinedEvents, currentUser } = useDashboard();
+  const { events, joinedEvents, currentUser } = useDashboard();
 
-  const organizedCount = events.filter(
-    (event) => event.createdBy === currentUser?.name
-  ).length;
   const activeCount = events.filter((event) => new Date(event.start) >= new Date()).length;
   const joinedCount = joinedEvents.length;
-  const teamCount = registeredTeams.length;
-
-  const hasTeams = teamCount > 0;
   const hasJoined = joinedCount > 0;
-  const hasOrganized = organizedCount > 0;
 
   const recentEvents = useMemo(() => events.slice(0, 4), [events]);
 
@@ -43,41 +36,24 @@ export default function OverviewPage() {
             Hey, {firstName} 👋
           </h1>
           <p className="mt-2.5 max-w-xl text-sm text-zinc-600">
-            Build your squad, join tournaments, and organize your own events — all completely free.
+            Explore events, register in seconds, and stay connected with the local basketball scene.
           </p>
           <div className="mt-5 flex flex-wrap gap-3">
-            {!hasTeams && (
-              <Button href="/dashboard/teams" variant="primary">
-                Create your first squad
-              </Button>
-            )}
-            {hasTeams && !hasJoined && (
-              <Button href="/dashboard/events" variant="primary">
-                Browse events
-              </Button>
-            )}
-            {(hasTeams || hasJoined || hasOrganized) && (
-              <Button href="/dashboard/organize" variant="secondary">
-                Organize a tournament
+            <Button href="/dashboard/events" variant="primary">
+              Browse events
+            </Button>
+            {hasJoined && (
+              <Button href="/dashboard/connect" variant="secondary">
+                Meet players
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2">
         <StatCard
-          label="My squads"
-          value={teamCount}
-          accent={!hasTeams}
-          icon={
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-              <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8z" />
-            </svg>
-          }
-        />
-        <StatCard
-          label="Joined events"
+          label="Registered events"
           value={joinedCount}
           icon={
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
@@ -86,8 +62,8 @@ export default function OverviewPage() {
           }
         />
         <StatCard
-          label="Organized"
-          value={organizedCount}
+          label="Open events"
+          value={activeCount}
           icon={
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
               <path d="M12 5v14M5 12h14" />
@@ -105,27 +81,27 @@ export default function OverviewPage() {
           <div className="mt-6 space-y-3">
             <FlowStep
               step={1}
-              title="Create a squad"
-              description="Register your team with player names"
-              href="/dashboard/teams"
-              completed={hasTeams}
-              active={!hasTeams}
+              title="Browse events"
+              description="Check what is happening in your city and pick the ones you want"
+              href="/dashboard/events"
+              completed={hasJoined}
+              active={!hasJoined}
             />
             <FlowStep
               step={2}
-              title="Join an event"
-              description="Browse tournaments and apply with your squad"
+              title="Register"
+              description="Sign up directly for an event in a few clicks"
               href="/dashboard/events"
               completed={hasJoined}
-              active={hasTeams && !hasJoined}
+              active={hasJoined}
             />
             <FlowStep
               step={3}
-              title="Organize a tournament"
-              description="Create events & auto-generate fixtures for free"
-              href="/dashboard/organize"
-              completed={hasOrganized}
-              active={hasTeams && hasJoined && !hasOrganized}
+              title="Connect with players"
+              description="Meet nearby athletes and build your local circle"
+              href="/dashboard/connect"
+              completed={false}
+              active={false}
             />
           </div>
         </Card>
@@ -133,16 +109,6 @@ export default function OverviewPage() {
         <Card className="lg:col-span-3">
           <SectionTitle label="Shortcuts" title="Quick actions" />
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
-            <QuickAction
-              title="Manage squads"
-              subtitle={`${teamCount} squad${teamCount !== 1 ? 's' : ''} registered`}
-              href="/dashboard/teams"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
-                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
-                </svg>
-              }
-            />
             <QuickAction
               title="Browse events"
               subtitle={`${activeCount} active tournament${activeCount !== 1 ? 's' : ''}`}
@@ -154,18 +120,8 @@ export default function OverviewPage() {
               }
             />
             <QuickAction
-              title="Create event"
-              subtitle="Free to publish"
-              href="/dashboard/organize"
-              icon={
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">
-                  <path d="M12 5v14M5 12h14" />
-                </svg>
-              }
-            />
-            <QuickAction
               title="Connect players"
-              subtitle="Meet local squads"
+              subtitle="Meet local athletes"
               href="/dashboard/connect"
               icon={
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6">

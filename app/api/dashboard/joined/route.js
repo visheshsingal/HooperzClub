@@ -21,10 +21,10 @@ export async function GET() {
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { eventId, teamId, teamName, teamSport } = body;
+    const { eventId, teamId, teamName, teamSport, participantName } = body;
 
-    if (!eventId || !teamId || !teamName || !teamSport) {
-      return new Response(JSON.stringify({ error: 'eventId, teamId, teamName and teamSport are required.' }), {
+    if (!eventId) {
+      return new Response(JSON.stringify({ error: 'eventId is required.' }), {
         status: 400,
         headers: { 'Content-Type': 'application/json' },
       });
@@ -32,9 +32,10 @@ export async function POST(request) {
 
     const joined = {
       eventId,
-      teamId,
-      teamName,
-      teamSport,
+      teamId: teamId || null,
+      teamName: teamName || participantName || 'Solo participant',
+      teamSport: teamSport || null,
+      participantName: participantName || teamName || 'Solo participant',
       joinedAt: new Date().toISOString(),
     };
 

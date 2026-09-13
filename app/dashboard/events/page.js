@@ -16,7 +16,6 @@ import {
 export default function EventsPage() {
   const {
     events,
-    registeredTeams,
     joinedEvents,
     joinEvent,
     deleteEvent,
@@ -24,7 +23,6 @@ export default function EventsPage() {
     currentUser,
   } = useDashboard();
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [selectedTeamId, setSelectedTeamId] = useState('');
   const [sportFilter, setSportFilter] = useState('All');
   const [dateFilter, setDateFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState('All');
@@ -41,7 +39,6 @@ export default function EventsPage() {
 
   const closeEventDetails = () => {
     setSelectedEvent(null);
-    setSelectedTeamId('');
   };
 
   const isJoined = selectedEvent
@@ -49,18 +46,12 @@ export default function EventsPage() {
     : false;
 
   const handleApply = async (eventId) => {
-    const team = registeredTeams.find((teamEntry) => teamEntry._id === selectedTeamId);
-    if (!team) {
-      showToast('Select a squad with the matching sport first.', 'error');
-      return;
-    }
-
     try {
-      await joinEvent(eventId, team);
-      showToast(`Applied with ${team.name}!`);
+      await joinEvent(eventId, null);
+      showToast('You are registered for the event.');
       closeEventDetails();
     } catch {
-      showToast('Failed to apply. Try again.', 'error');
+      showToast('Failed to register. Try again.', 'error');
     }
   };
 
@@ -82,16 +73,8 @@ export default function EventsPage() {
       <PageHeader
         label="Step 2"
         title="Browse & join events"
-        description="Find tournaments, pick your squad, and apply. Everything is free."
-        action={
-          registeredTeams.length === 0 ? (
-            <Button href="/dashboard/teams" variant="primary">
-              Create a squad first
-            </Button>
-          ) : (
-            <Badge variant="green">{registeredTeams.length} squad(s) ready</Badge>
-          )
-        }
+        description="Find tournaments and register for the ones you want to join. Everything is free."
+        action={<Badge variant="green">Open registrations</Badge>}
       />
 
       <Card>
@@ -215,30 +198,9 @@ export default function EventsPage() {
                 </div>
               )}
 
-              {!isJoined && (
-                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                  <Select
-                    label="Select your squad"
-                    value={selectedTeamId}
-                    onChange={(e) => setSelectedTeamId(e.target.value)}
-                  >
-                    <option value="">Choose a squad</option>
-                    {registeredTeams
-                      .filter((team) => team.sport === selectedEvent.sport)
-                      .map((team) => (
-                        <option key={team._id} value={team._id}>
-                          {team.name} ({team.players.length} players)
-                        </option>
-                      ))}
-                  </Select>
-                  {registeredTeams.filter((team) => team.sport === selectedEvent.sport).length === 0 && (
-                    <p className="mt-2 text-sm text-red-600">
-                      No {selectedEvent.sport} squad found.{' '}
-                      <a href="/dashboard/teams" className="underline">Create one</a>
-                    </p>
-                  )}
-                </div>
-              )}
+              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                <p className="text-sm text-zinc-700">Register directly for this event as a participant.</p>
+              </div>
 
               <div className="flex flex-wrap gap-3">
                 {isJoined ? (
