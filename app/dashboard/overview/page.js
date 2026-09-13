@@ -144,11 +144,11 @@ export default function OverviewPage() {
         {recentEvents.length === 0 ? (
           <div className="mt-6">
             <EmptyState
-              title="No events yet"
-              description="Be the first to organize a tournament or check back later."
+              title="No events published yet"
+              description="Check back soon for upcoming Basketball events hosted by Hooperzclub Admins!"
               action={
-                <Button href="/dashboard/organize" variant="primary">
-                  Create an event
+                <Button href="/dashboard/events" variant="primary">
+                  Browse events
                 </Button>
               }
             />

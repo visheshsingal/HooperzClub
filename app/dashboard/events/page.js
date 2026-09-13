@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useDashboard } from '../dashboard-context';
+import FixturesBracket from '../../../components/dashboard/FixturesBracket';
 import {
   PageHeader,
   Card,
@@ -18,13 +19,10 @@ export default function EventsPage() {
     events,
     joinedEvents,
     joinEvent,
-    deleteEvent,
     discardJoin,
-    currentUser,
   } = useDashboard();
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [sportFilter, setSportFilter] = useState('All');
-  const [dateFilter, setDateFilter] = useState('');
+  const [formatFilter, setFormatFilter] = useState('All');
   const [locationFilter, setLocationFilter] = useState('All');
   const [toast, setToast] = useState('');
 
@@ -48,19 +46,23 @@ export default function EventsPage() {
   const handleApply = async (eventId) => {
     try {
       await joinEvent(eventId, null);
-      showToast('You are registered for the event.');
-      closeEventDetails();
+      showToast('You are registered for this Basketball event!');
     } catch {
-      showToast('Failed to register. Try again.', 'error');
+      showToast('Failed to register. Please try again.', 'error');
     }
   };
 
-  const locations = ['All', ...Array.from(new Set(events.map((event) => event.location || event.venue).filter(Boolean)))];
+  const locations = [
+    'All',
+    ...Array.from(new Set(events.map((event) => event.location || event.venue).filter(Boolean))),
+  ];
 
   const filteredEvents = events
-    .filter((event) => sportFilter === 'All' || event.sport === sportFilter)
-    .filter((event) => locationFilter === 'All' || (event.location || event.venue) === locationFilter)
-    .filter((event) => !dateFilter || event.start === dateFilter)
+    .filter((event) => formatFilter === 'All' || (event.format || '3v3') === formatFilter)
+    .filter(
+      (event) =>
+        locationFilter === 'All' || (event.location || event.venue) === locationFilter
+    )
     .slice()
     .sort((a, b) => {
       const dateA = new Date(a.start || a.createdAt || 0);
@@ -71,24 +73,35 @@ export default function EventsPage() {
   return (
     <div className="space-y-8">
       <PageHeader
-        label="Step 2"
-        title="Browse & join events"
-        description="Find tournaments and register for the ones you want to join. Everything is free."
-        action={<Badge variant="green">Open registrations</Badge>}
+        label="Basketball Tournaments"
+        title="Official Basketball Events & Fixtures"
+        description="Browse official Basketball tournaments, register your squad, and view live match brackets & fixtures."
+        action={<Badge variant="red">Basketball Only</Badge>}
       />
 
       <Card>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Select label="Sport" value={sportFilter} onChange={(e) => setSportFilter(e.target.value)}>
-            <option>All</option>
-            <option>Basketball</option>
-            <option>Football</option>
-            <option>Badminton</option>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Select
+            label="Basketball Format"
+            value={formatFilter}
+            onChange={(e) => setFormatFilter(e.target.value)}
+          >
+            <option value="All">All Formats (1v1, 2v2, 3v3, 5v5)</option>
+            <option value="1v1">1v1 Isolation</option>
+            <option value="2v2">2v2 Half-Court</option>
+            <option value="3v3">3v3 Streetball</option>
+            <option value="5v5">5v5 Full Court</option>
           </Select>
-          <Input label="Date" type="date" value={dateFilter} onChange={(e) => setDateFilter(e.target.value)} />
-          <Select label="Location" value={locationFilter} onChange={(e) => setLocationFilter(e.target.value)}>
-            {locations.map((location) => (
-              <option key={location}>{location}</option>
+
+          <Select
+            label="Venue Location"
+            value={locationFilter}
+            onChange={(e) => setLocationFilter(e.target.value)}
+          >
+            {locations.map((loc) => (
+              <option key={loc} value={loc}>
+                {loc}
+              </option>
             ))}
           </Select>
         </div>
@@ -96,46 +109,71 @@ export default function EventsPage() {
         <div className="mt-8">
           {filteredEvents.length === 0 ? (
             <EmptyState
-              title="No events found"
-              description="Try adjusting filters or check back later."
-              action={
-                <Button href="/dashboard/organize" variant="secondary">
-                  Create an event
-                </Button>
-              }
+              title="No Basketball Events Found"
+              description="There are currently no active Basketball tournaments matching your filters. Check back soon for upcoming Admin published events!"
             />
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2">
               {filteredEvents.map((event) => {
                 const joined = joinedEvents.some((j) => j.eventId === event.id);
+
                 return (
                   <article
                     key={event.id}
-                    className="group relative overflow-hidden rounded-2xl border border-zinc-200 bg-zinc-50 transition hover:border-red-200 hover:bg-white"
+                    className="group relative overflow-hidden rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm transition hover:border-red-300 hover:shadow-md"
                   >
-                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-red-500 to-red-700 opacity-0 transition group-hover:opacity-100" />
-                    <div className="p-5">
-                      <div className="flex items-start justify-between gap-3">
-                        <Badge variant="red">{event.sport}</Badge>
+                    <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-red-500 to-red-700" />
+                    <div>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="rounded-full bg-red-600 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white">
+                          Basketball {event.format ? `(${event.format})` : '(3v3)'}
+                        </span>
                         <div className="flex gap-2">
-                          {joined && <Badge variant="green">Joined</Badge>}
-                          <Badge>{event.fee > 0 ? `₹${event.fee}` : 'Free'}</Badge>
+                          {joined && (
+                            <span className="rounded-full bg-emerald-100 px-3 py-1 text-[10px] font-bold text-emerald-800 uppercase tracking-wider">
+                              ✓ Registered
+                            </span>
+                          )}
+                          <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold text-zinc-700">
+                            {event.fee > 0 ? `$${event.fee}` : 'Free Entry'}
+                          </span>
                         </div>
                       </div>
-                      <h3 className="mt-3 text-lg font-semibold text-black group-hover:text-red-600 transition">
+
+                      <h3 className="mt-4 text-xl font-bold text-black transition group-hover:text-red-600">
                         {event.name}
                       </h3>
-                      <div className="mt-2 space-y-1 text-sm text-zinc-500">
-                        <p>{event.location || event.venue || 'Location TBD'}</p>
-                        <p>{event.start || 'Date TBD'} · {event.teams} teams · {event.fixtureType || 'TBD'}</p>
+
+                      <div className="mt-3 space-y-1 text-sm text-zinc-600">
+                        <p className="flex items-center gap-1.5">
+                          <span>📍</span> {event.location || event.venue || 'Venue TBD'}
+                        </p>
+                        <p className="flex items-center gap-1.5">
+                          <span>📅</span>{' '}
+                          {event.start ? new Date(event.start).toLocaleString() : 'Date TBD'}{' '}
+                          • {event.teams || event.teamCount || 8} Teams Max
+                        </p>
                       </div>
-                      <Button
-                        variant="primary"
-                        className="mt-4 w-full"
-                        onClick={() => openEventDetails(event)}
-                      >
-                        View & apply
-                      </Button>
+
+                      <div className="mt-6 flex items-center gap-3">
+                        {joined ? (
+                          <Button
+                            variant="secondary"
+                            className="w-full justify-center"
+                            onClick={() => openEventDetails(event)}
+                          >
+                            View Fixtures & Bracket →
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="primary"
+                            className="w-full justify-center"
+                            onClick={() => handleApply(event.id)}
+                          >
+                            Register for Event
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </article>
                 );
@@ -145,93 +183,79 @@ export default function EventsPage() {
         </div>
       </Card>
 
+      {/* Event Details & Match Fixtures Modal */}
       {selectedEvent && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/30 p-4 sm:items-center">
-          <div className="w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-2xl">
-            <div className="flex items-start justify-between border-b border-zinc-200 p-5">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 p-4 sm:items-center backdrop-blur-sm">
+          <div className="w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-3xl border border-zinc-200 bg-white shadow-2xl">
+            <div className="flex items-start justify-between border-b border-zinc-200 p-6 bg-zinc-50">
               <div>
-                <Badge variant="red">{selectedEvent.sport}</Badge>
+                <span className="rounded-full bg-red-600 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white">
+                  Basketball ({selectedEvent.format || '3v3'})
+                </span>
                 <h2 className="mt-2 text-2xl font-bold text-black">{selectedEvent.name}</h2>
-                <p className="mt-1 text-sm text-zinc-500">
-                  by {selectedEvent.createdBy || 'Organizer'}
+                <p className="mt-1 text-xs text-zinc-500">
+                  Published by Admin • 📍 {selectedEvent.location || 'TBD'} • 📅{' '}
+                  {selectedEvent.start ? new Date(selectedEvent.start).toLocaleString() : 'TBD'}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={closeEventDetails}
-                className="rounded-xl p-2 text-zinc-500 transition hover:bg-zinc-100 hover:text-black"
+                className="rounded-full p-2 text-zinc-400 transition hover:bg-zinc-200 hover:text-black"
               >
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-5 w-5">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="h-6 w-6">
                   <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
             </div>
 
-            <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-5 space-y-5">
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl bg-zinc-50 p-4">
-                  <p className="text-xs uppercase tracking-wider text-zinc-500">Details</p>
-                  <div className="mt-2 space-y-1 text-sm text-zinc-700">
-                    <p>Location: {selectedEvent.location || 'TBD'}</p>
-                    <p>Date: {selectedEvent.start || 'TBD'}</p>
-                    <p>Format: {selectedEvent.fixtureType || 'TBD'}</p>
-                    <p>Teams: {selectedEvent.teams || 'TBD'}</p>
-                    <p>Fee: {selectedEvent.fee > 0 ? `₹${selectedEvent.fee}` : 'Free'}</p>
-                  </div>
+            <div className="max-h-[calc(90vh-140px)] overflow-y-auto p-6 space-y-6">
+              {/* Event Info Header */}
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Match Format</p>
+                  <p className="mt-1 text-base font-bold text-zinc-900">{selectedEvent.format || '3v3'} Basketball</p>
                 </div>
-                <div className="rounded-2xl bg-zinc-50 p-4">
-                  <p className="text-xs uppercase tracking-wider text-zinc-500">Description</p>
-                  <p className="mt-2 text-sm text-zinc-700">
-                    {selectedEvent.description || 'No description provided.'}
+
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Tournament Type</p>
+                  <p className="mt-1 text-base font-bold text-zinc-900">{selectedEvent.tournamentType || 'Knockout'}</p>
+                </div>
+
+                <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">Registration</p>
+                  <p className="mt-1 text-base font-bold text-emerald-600">
+                    {isJoined ? '✓ You are Registered' : 'Open'}
                   </p>
                 </div>
               </div>
 
-              {selectedEvent.fixtures?.length > 0 && (
-                <div className="rounded-2xl bg-zinc-50 p-4">
-                  <p className="text-xs uppercase tracking-wider text-zinc-500">Fixtures</p>
-                  <ol className="mt-2 space-y-1 list-decimal list-inside text-sm text-zinc-600">
-                    {selectedEvent.fixtures.map((fixture, index) => (
-                      <li key={index}>{fixture}</li>
-                    ))}
-                  </ol>
-                </div>
-              )}
-
-              <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <p className="text-sm text-zinc-700">Register directly for this event as a participant.</p>
+              {/* Tournament Fixtures Component */}
+              <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+                <FixturesBracket fixtures={selectedEvent.fixtures || []} isAdmin={false} />
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap items-center justify-between gap-4 border-t border-zinc-200 pt-4">
                 {isJoined ? (
                   <Button
                     variant="danger"
                     onClick={async () => {
                       await discardJoin(selectedEvent.id);
-                      showToast('Application withdrawn.');
+                      showToast('Registration withdrawn.');
                       closeEventDetails();
                     }}
                   >
-                    Withdraw application
+                    Withdraw Registration
                   </Button>
                 ) : (
                   <Button variant="primary" onClick={() => handleApply(selectedEvent.id)}>
-                    Apply to event
+                    Register Now
                   </Button>
                 )}
 
-                {selectedEvent.createdBy === currentUser?.name && (
-                  <Button
-                    variant="danger"
-                    onClick={async () => {
-                      await deleteEvent(selectedEvent.id);
-                      showToast('Event deleted.');
-                      closeEventDetails();
-                    }}
-                  >
-                    Delete event
-                  </Button>
-                )}
+                <Button variant="secondary" onClick={closeEventDetails}>
+                  Close Window
+                </Button>
               </div>
             </div>
           </div>

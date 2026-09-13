@@ -152,8 +152,8 @@ export default function DashboardLayout({ children }) {
                 <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400">Quick guide</p>
                 <ol className="mt-2 space-y-1 text-sm text-zinc-300">
                   <li>1. Build your squad</li>
-                  <li>2. Join free events</li>
-                  <li>3. Organize your own</li>
+                  <li>2. Register for events</li>
+                  <li>3. View match fixtures</li>
                 </ol>
               </div>
             </nav>

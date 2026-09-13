@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import BrandLogo from '../../components/BrandLogo';
+import FixturesBracket from '../../components/dashboard/FixturesBracket';
 
 const adminNav = [
   { id: 'dashboard', label: 'Dashboard' },
+  { id: 'events', label: 'Basketball Events' },
   { id: 'users', label: 'Users' },
 ];
 
@@ -13,8 +15,24 @@ export default function AdminPage() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [users, setUsers] = useState([]);
+  const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [expandedEventId, setExpandedEventId] = useState(null);
+
+  // Form State for creating Basketball Event
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [newEvent, setNewEvent] = useState({
+    name: '',
+    format: '3v3', // 1v1, 2v2, 3v3, 5v5
+    teamCount: 8,
+    tournamentType: 'Knockout', // Knockout or Round Robin
+    start: '',
+    location: '',
+    fee: 0,
+    description: '',
+  });
 
   useEffect(() => {
     const token = localStorage.getItem('hooperz_token');
@@ -44,13 +62,13 @@ export default function AdminPage() {
           return;
         }
 
-        const usersRes = await fetch('/api/admin/users', {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const [usersRes, eventsRes] = await Promise.all([
+          fetch('/api/admin/users', { headers: { Authorization: `Bearer ${token}` } }),
+          fetch('/api/admin/events', { headers: { Authorization: `Bearer ${token}` } }),
+        ]);
 
-        if (usersRes.ok) {
-          setUsers(await usersRes.json());
-        }
+        if (usersRes.ok) setUsers(await usersRes.json());
+        if (eventsRes.ok) setEvents(await eventsRes.json());
       } catch (error) {
         console.error('Unable to load admin data', error);
       } finally {
@@ -77,12 +95,80 @@ export default function AdminPage() {
       body: JSON.stringify({ userId, blocked }),
     });
 
-    if (!response.ok) {
-      return;
-    }
+    if (!response.ok) return;
 
     const updatedUser = await response.json();
     setUsers((prev) => prev.map((user) => (user._id === updatedUser._id ? updatedUser : user)));
+  };
+
+  const handleCreateEvent = async (e) => {
+    e.preventDefault();
+    if (!newEvent.name.trim()) return;
+
+    setCreating(true);
+    try {
+      const token = localStorage.getItem('hooperz_token');
+      const response = await fetch('/api/admin/events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newEvent),
+      });
+
+      if (response.ok) {
+        const created = await response.json();
+        setEvents((prev) => [created, ...prev]);
+        setShowCreateForm(false);
+        setNewEvent({
+          name: '',
+          format: '3v3',
+          teamCount: 8,
+          tournamentType: 'Knockout',
+          start: '',
+          location: '',
+          fee: 0,
+          description: '',
+        });
+      }
+    } catch (err) {
+      console.error('Error creating event', err);
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleDeleteEvent = async (eventId) => {
+    if (!confirm('Are you sure you want to delete this Basketball event?')) return;
+    const token = localStorage.getItem('hooperz_token');
+    const response = await fetch(`/api/admin/events?eventId=${eventId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (response.ok) {
+      setEvents((prev) => prev.filter((ev) => ev.id !== eventId));
+    }
+  };
+
+  const handleUpdateMatchScore = async (eventId, matchId, scoreA, scoreB, winner) => {
+    const token = localStorage.getItem('hooperz_token');
+    const response = await fetch('/api/admin/events/fixtures', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ eventId, matchId, scoreA, scoreB, winner }),
+    });
+
+    if (response.ok) {
+      const body = await response.json();
+      setEvents((prev) =>
+        prev.map((ev) => (ev.id === eventId ? { ...ev, fixtures: body.fixtures } : ev))
+      );
+    }
   };
 
   return (
@@ -119,31 +205,13 @@ export default function AdminPage() {
                     className={`relative flex w-full items-center gap-3 rounded-xl border px-3 py-2.5 text-left text-sm transition ${
                       active
                         ? 'border-red-500/30 bg-zinc-900 font-semibold text-white shadow-sm before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-r before:bg-red-600'
-                        : 'border-transparent text-zinc-300 hover:border-zinc-800 hover:bg-zinc-900 hover:text-white'
+                        : 'border-transparent text-zinc-400 hover:border-zinc-800 hover:bg-zinc-900 hover:text-white'
                     }`}
                   >
-                    <span className={active ? 'text-red-400' : 'text-zinc-400'}>
-                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-                        {item.id === 'dashboard' ? (
-                          <path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1h-5v-6H9v6H4a1 1 0 01-1-1V9.5z" />
-                        ) : (
-                          <path d="M12 12a4 4 0 100-8 4 4 0 000 8zm-7 9a7 7 0 0114 0" />
-                        )}
-                      </svg>
-                    </span>
-                    <span className="flex-1">{item.label}</span>
+                    <span>{item.label}</span>
                   </button>
                 );
               })}
-            </div>
-
-            <div className="mt-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400">Admin tools</p>
-              <ul className="mt-2 space-y-2 text-sm text-zinc-300">
-                <li>• User moderation</li>
-                <li>• Access control</li>
-                <li>• Live oversight</li>
-              </ul>
             </div>
           </nav>
         </aside>
@@ -186,18 +254,22 @@ export default function AdminPage() {
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div>
                       <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-red-600">Overview</p>
-                      <h2 className="mt-2 text-3xl font-bold text-black">Admin dashboard</h2>
+                      <h2 className="mt-2 text-3xl font-bold text-black">Admin Control Panel</h2>
                     </div>
                     <div className="rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.25em] text-red-700">
-                      Live
+                      Live System
                     </div>
                   </div>
                 </section>
 
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
                     <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Total users</p>
                     <p className="mt-4 text-4xl font-bold text-black">{users.length}</p>
+                  </div>
+                  <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Basketball Events</p>
+                    <p className="mt-4 text-4xl font-bold text-red-600">{events.length}</p>
                   </div>
                   <div className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm">
                     <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Active users</p>
@@ -207,6 +279,214 @@ export default function AdminPage() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-zinc-500">Blocked users</p>
                     <p className="mt-4 text-4xl font-bold text-black">{users.filter((user) => user.blocked).length}</p>
                   </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'events' && (
+              <div className="space-y-6">
+                <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-red-600">Basketball Events</p>
+                      <h2 className="mt-2 text-2xl font-bold text-black">Create & Manage Basketball Tournaments</h2>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowCreateForm((prev) => !prev)}
+                      className="rounded-full bg-red-600 px-5 py-2.5 text-xs font-bold uppercase tracking-[0.2em] text-white shadow-sm transition hover:bg-red-500"
+                    >
+                      {showCreateForm ? 'Close Form' : '+ Create Basketball Event'}
+                    </button>
+                  </div>
+
+                  {/* Create Basketball Event Form */}
+                  {showCreateForm && (
+                    <form onSubmit={handleCreateEvent} className="mt-6 space-y-4 border-t border-zinc-200 pt-6">
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Event Title</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Hooperz 3v3 City Showdown"
+                            value={newEvent.name}
+                            onChange={(e) => setNewEvent({ ...newEvent, name: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Basketball Match Format</label>
+                          <select
+                            value={newEvent.format}
+                            onChange={(e) => setNewEvent({ ...newEvent, format: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          >
+                            <option value="1v1">1v1 (Single Isolation)</option>
+                            <option value="2v2">2v2 (Half-Court)</option>
+                            <option value="3v3">3v3 (Streetball)</option>
+                            <option value="5v5">5v5 (Full Court)</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Number of Teams / Players</label>
+                          <select
+                            value={newEvent.teamCount}
+                            onChange={(e) => setNewEvent({ ...newEvent, teamCount: Number(e.target.value) })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          >
+                            <option value={4}>4 Teams / Players</option>
+                            <option value={8}>8 Teams / Players</option>
+                            <option value={16}>16 Teams / Players</option>
+                            <option value={32}>32 Teams / Players</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Tournament Format</label>
+                          <select
+                            value={newEvent.tournamentType}
+                            onChange={(e) => setNewEvent({ ...newEvent, tournamentType: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          >
+                            <option value="Knockout">Single Elimination Knockout</option>
+                            <option value="Round Robin">Round Robin</option>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Date & Time</label>
+                          <input
+                            type="datetime-local"
+                            required
+                            value={newEvent.start}
+                            onChange={(e) => setNewEvent({ ...newEvent, start: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Venue Location</label>
+                          <input
+                            type="text"
+                            required
+                            placeholder="e.g. Downtown Court 2, Main Arena"
+                            value={newEvent.location}
+                            onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Entry Fee (0 for Free)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            value={newEvent.fee}
+                            onChange={(e) => setNewEvent({ ...newEvent, fee: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold uppercase tracking-wider text-zinc-700">Description & Rules</label>
+                          <input
+                            type="text"
+                            placeholder="Basketball tournament rules, ball size, referee info"
+                            value={newEvent.description}
+                            onChange={(e) => setNewEvent({ ...newEvent, description: e.target.value })}
+                            className="mt-1 w-full rounded-xl border border-zinc-300 px-3.5 py-2 text-sm text-black focus:border-red-500 focus:outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-end gap-3 pt-3">
+                        <button
+                          type="button"
+                          onClick={() => setShowCreateForm(false)}
+                          className="rounded-xl px-4 py-2 text-xs font-semibold text-zinc-600 hover:bg-zinc-100"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          disabled={creating}
+                          className="rounded-xl bg-red-600 px-5 py-2 text-xs font-bold uppercase tracking-widest text-white shadow hover:bg-red-500 disabled:opacity-50"
+                        >
+                          {creating ? 'Creating Event & Fixtures...' : 'Publish Basketball Event'}
+                        </button>
+                      </div>
+                    </form>
+                  )}
+                </section>
+
+                {/* Events List & Fixtures Manager */}
+                <div className="space-y-4">
+                  {events.length === 0 ? (
+                    <div className="rounded-3xl border border-zinc-200 bg-white p-8 text-center text-zinc-500">
+                      No Basketball events found. Click "+ Create Basketball Event" above to create your first event!
+                    </div>
+                  ) : (
+                    events.map((event) => {
+                      const isExpanded = expandedEventId === event.id;
+
+                      return (
+                        <div key={event.id} className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm">
+                          <div className="flex flex-wrap items-center justify-between gap-4">
+                            <div className="space-y-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span className="rounded-full bg-red-600 px-3 py-1 text-[10px] font-extrabold uppercase tracking-widest text-white">
+                                  Basketball ({event.format || '3v3'})
+                                </span>
+                                <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold text-zinc-700">
+                                  {event.teams || event.teamCount || 8} Teams Max
+                                </span>
+                                <span className="rounded-full bg-zinc-100 px-3 py-1 text-[10px] font-bold text-zinc-700">
+                                  {event.tournamentType || 'Knockout'}
+                                </span>
+                              </div>
+                              <h3 className="text-xl font-bold text-black">{event.name}</h3>
+                              <p className="text-xs text-zinc-600">
+                                📍 {event.location || event.venue || 'TBD'} • 📅 {event.start ? new Date(event.start).toLocaleString() : 'Upcoming'} • 💰 {event.fee ? `$${event.fee}` : 'Free Entry'}
+                              </p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <button
+                                type="button"
+                                onClick={() => setExpandedEventId(isExpanded ? null : event.id)}
+                                className="rounded-xl border border-zinc-200 bg-zinc-50 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-zinc-800 transition hover:bg-zinc-100"
+                              >
+                                {isExpanded ? 'Hide Fixtures' : 'Manage Bracket & Fixtures'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteEvent(event.id)}
+                                className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold uppercase tracking-wider text-red-600 transition hover:bg-red-100"
+                              >
+                                Delete
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Expanded Fixtures Bracket View */}
+                          {isExpanded && (
+                            <div className="mt-6 border-t border-zinc-200 pt-6">
+                              <FixturesBracket
+                                fixtures={event.fixtures || []}
+                                isAdmin={true}
+                                onUpdateMatch={(matchId, scoreA, scoreB, winner) =>
+                                  handleUpdateMatchScore(event.id, matchId, scoreA, scoreB, winner)
+                                }
+                              />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             )}

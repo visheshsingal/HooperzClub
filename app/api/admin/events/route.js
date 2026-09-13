@@ -1,5 +1,6 @@
 import clientPromise from '../../../../lib/mongodb.js';
 import { verifyAdminToken } from '../../../../lib/auth.js';
+import { generateBasketballFixtures } from '../../../../lib/fixtures.js';
 
 function parseBearerToken(request) {
   const authHeader = request.headers.get('Authorization') || request.headers.get('authorization');
@@ -24,6 +25,64 @@ export async function GET(request) {
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ error: 'Unable to load events.' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
+  }
+}
+
+export async function POST(request) {
+  const token = parseBearerToken(request);
+  const verified = verifyAdminToken(token);
+  if (!verified) {
+    return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
+  }
+
+  try {
+    const body = await request.json();
+    const {
+      name,
+      format = '3v3', // 1v1, 2v2, 3v3, 5v5
+      teamCount = 8,
+      tournamentType = 'Knockout',
+      location = '',
+      start = '',
+      fee = 0,
+      description = '',
+      customFixtures,
+    } = body;
+
+    if (!name) {
+      return new Response(JSON.stringify({ error: 'Event name is required.' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    const eventId = `evt_${Date.now()}`;
+    const fixtures = customFixtures && customFixtures.length > 0
+      ? customFixtures
+      : generateBasketballFixtures(teamCount, tournamentType);
+
+    const event = {
+      id: eventId,
+      name,
+      sport: 'Basketball',
+      format,
+      teamCount: Number(teamCount),
+      teams: Number(teamCount),
+      tournamentType,
+      location,
+      start,
+      fee: Number(fee) || 0,
+      description,
+      fixtures,
+      createdBy: 'Admin',
+      createdAt: new Date().toISOString(),
+    };
+
+    const client = await clientPromise;
+    const db = client.db('hooperzclub');
+    await db.collection('events').insertOne(event);
+
+    return new Response(JSON.stringify(event), { status: 201, headers: { 'Content-Type': 'application/json' } });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ error: 'Unable to create event.' }), { status: 500, headers: { 'Content-Type': 'application/json' } });
   }
 }
 
