@@ -117,9 +117,9 @@ export default function ProfilePage() {
             placeholder="Tell others what you play, your level, and what you are looking for."
           />
 
-          <div className="rounded-2xl border border-white/10 bg-[#080809] p-5">
-            <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-400">Connect links</h3>
-            <p className="mt-2 text-sm text-zinc-500">Add any links you want others to use to reach you.</p>
+          <div className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
+            <h3 className="text-sm font-semibold uppercase tracking-[0.24em] text-zinc-500">Connect links</h3>
+            <p className="mt-2 text-sm text-zinc-600">Add any links you want others to use to reach you.</p>
             <div className="mt-5 grid gap-5 md:grid-cols-3">
               <Input label="WhatsApp" name="whatsapp" value={form.whatsapp} onChange={handleChange} placeholder="https://wa.me/..." />
               <Input label="Instagram" name="instagram" value={form.instagram} onChange={handleChange} placeholder="https://instagram.com/..." />

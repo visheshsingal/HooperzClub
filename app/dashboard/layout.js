@@ -110,10 +110,10 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#f4f4f4] text-black">
+      <div className="flex min-h-screen items-center justify-center bg-[#0b0b0d] text-white">
         <div className="flex flex-col items-center gap-4">
           <div className="h-10 w-10 animate-spin rounded-full border-2 border-red-600 border-t-transparent" />
-          <p className="text-sm text-zinc-600">Loading your dashboard…</p>
+          <p className="text-sm text-zinc-400">Loading your dashboard…</p>
         </div>
       </div>
     );
@@ -124,22 +124,22 @@ export default function DashboardLayout({ children }) {
       <div className="min-h-screen bg-[#f5f5f5] text-zinc-900">
         <div className="flex min-h-screen">
           {sidebarOpen && (
-            <div className="fixed inset-0 z-40 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />
+            <div className="fixed inset-0 z-40 bg-black/40 lg:hidden" onClick={() => setSidebarOpen(false)} />
           )}
 
           <aside
-            className={`fixed inset-y-0 left-0 z-50 w-72 transform border-r border-zinc-200 bg-white transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:flex-shrink-0 lg:translate-x-0 ${
+            className={`fixed inset-y-0 left-0 z-50 w-72 transform border-r border-zinc-800 bg-[#09090b] text-white transition duration-200 lg:sticky lg:top-0 lg:h-screen lg:w-72 lg:flex-shrink-0 lg:translate-x-0 ${
               sidebarOpen ? 'translate-x-0' : '-translate-x-full'
             }`}
           >
-            <div className="flex h-16 items-center border-b border-zinc-200 px-5">
+            <div className="flex h-16 items-center border-b border-zinc-800 px-5">
               <Link href="/dashboard/overview" className="flex items-center gap-3">
                 <BrandLogo className="h-9 w-auto max-w-[180px]" />
               </Link>
             </div>
 
             <nav className="flex h-[calc(100vh-4rem)] flex-col overflow-y-auto p-4">
-              <p className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-500">
+              <p className="mb-3 px-3 text-[9px] font-bold uppercase tracking-[0.25em] text-zinc-400">
                 Welcome back.
               </p>
               <div className="space-y-1">
@@ -150,16 +150,16 @@ export default function DashboardLayout({ children }) {
                       key={link.href}
                       href={link.href}
                       onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition duration-150 relative ${
+                      className={`relative flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm transition duration-150 ${
                         active
-                          ? 'border-red-100 bg-red-50 font-semibold text-black shadow-sm before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-r before:bg-red-600'
-                          : 'border-transparent text-zinc-600 hover:border-zinc-200 hover:bg-zinc-50 hover:text-black'
+                          ? 'border-red-500/30 bg-zinc-900 font-semibold text-white shadow-sm before:absolute before:left-0 before:top-1/2 before:-translate-y-1/2 before:h-5 before:w-[3px] before:rounded-r before:bg-red-600'
+                          : 'border-transparent text-zinc-300 hover:border-zinc-800 hover:bg-zinc-900 hover:text-white'
                       }`}
                     >
-                      <span className={active ? 'text-red-600' : 'text-zinc-500'}>{link.icon}</span>
+                      <span className={active ? 'text-red-400' : 'text-zinc-400'}>{link.icon}</span>
                       <span className="flex-1">{link.label}</span>
                       {link.step && (
-                        <span className={`text-[9px] font-bold ${active ? 'text-red-600' : 'text-zinc-500'}`}>
+                        <span className={`text-[9px] font-bold ${active ? 'text-red-400' : 'text-zinc-400'}`}>
                           {link.step}
                         </span>
                       )}
@@ -168,9 +168,9 @@ export default function DashboardLayout({ children }) {
                 })}
               </div>
 
-              <div className="mt-auto rounded-2xl border border-zinc-200 bg-zinc-50 p-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-500">Quick guide</p>
-                <ol className="mt-2 space-y-1 text-sm text-zinc-600">
+              <div className="mt-auto rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-zinc-400">Quick guide</p>
+                <ol className="mt-2 space-y-1 text-sm text-zinc-300">
                   <li>1. Build your squad</li>
                   <li>2. Join free events</li>
                   <li>3. Organize your own</li>
@@ -214,7 +214,7 @@ export default function DashboardLayout({ children }) {
               </div>
             </header>
 
-            <main className="flex-1 p-6">{children}</main>
+            <main className="flex-1 bg-[#f5f5f5] p-6">{children}</main>
           </div>
         </div>
       </div>

@@ -84,12 +84,12 @@ export default function LocationAutocomplete({ label, value, onChange, placehold
   };
 
   return (
-    <div ref={containerRef} className="relative block w-full space-y-2 text-sm text-zinc-300">
-      {label && <span className="block text-sm text-zinc-300">{label}</span>}
+    <div ref={containerRef} className="relative block w-full space-y-2 text-sm text-zinc-700">
+      {label && <span className="block text-[10px] font-bold uppercase tracking-[0.2em] text-zinc-500">{label}</span>}
       <div className="relative">
         <input
           type="text"
-          className="w-full rounded-lg border border-white/10 bg-[#0b0b0d] px-4 py-3 pr-10 text-sm text-white outline-none transition placeholder:text-zinc-600 focus:border-red-500/60 focus:ring-1 focus:ring-red-500/20"
+          className="w-full rounded-xl border border-zinc-300 bg-white px-4 py-3 pr-10 text-sm text-black outline-none transition placeholder:text-zinc-400 focus:border-red-500 focus:ring-0"
           value={query}
           onChange={handleInputChange}
           placeholder={placeholder}
@@ -124,14 +124,14 @@ export default function LocationAutocomplete({ label, value, onChange, placehold
       </div>
 
       {isOpen && (suggestions.length > 0 || (query.trim().length >= 3 && !loading)) && (
-        <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-lg border border-white/10 bg-[#0d0d0f] shadow-2xl">
+        <div className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-y-auto rounded-xl border border-zinc-200 bg-white shadow-2xl">
           {suggestions.length > 0 ? (
             suggestions.map((item, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={() => handleSelectSuggestion(item)}
-                className="w-full px-4 py-3 text-left text-sm text-zinc-300 hover:bg-white/[0.04] hover:text-white transition border-b border-white/[0.05] last:border-b-0"
+                className="w-full px-4 py-3 text-left text-sm text-zinc-700 transition hover:bg-zinc-50 hover:text-black border-b border-zinc-100 last:border-b-0"
               >
                 {item.display_name}
               </button>

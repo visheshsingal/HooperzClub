@@ -5,14 +5,18 @@ import Navbar from './Navbar';
 import Footer from './Footer';
 
 export default function AppShell({ children }) {
-  const pathname = usePathname();
-  const hideNavbar = pathname === '/login' || pathname === '/signup';
+  const pathname = usePathname() || '/';
+  const hideGlobalUi =
+    pathname === '/login' ||
+    pathname === '/signup' ||
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/admin');
 
   return (
     <>
-      {!hideNavbar && <Navbar />}
+      {!hideGlobalUi && <Navbar />}
       <div className="flex min-h-screen flex-col">{children}</div>
-      <Footer />
+      {!hideGlobalUi && <Footer />}
     </>
   );
 }

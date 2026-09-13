@@ -89,13 +89,13 @@ export default function TeamsPage() {
       />
 
       <Card glow={registeredTeams.length === 0}>
-        <div className="flex items-center gap-3 border-b border-white/5 pb-6">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-sm font-bold">
+        <div className="flex items-center gap-3 border-b border-zinc-200 pb-6">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-600 text-sm font-bold text-white">
             1
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-white">Create a new squad</h2>
-            <p className="text-sm text-zinc-500">Add player names separated by commas</p>
+            <h2 className="text-lg font-semibold text-black">Create a new squad</h2>
+            <p className="text-sm text-zinc-600">Add player names separated by commas</p>
           </div>
         </div>
 
@@ -138,7 +138,7 @@ export default function TeamsPage() {
 
       <Card>
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">
+          <h2 className="text-lg font-semibold text-black">
             Your squads
             <span className="ml-2 text-sm font-normal text-zinc-500">({registeredTeams.length})</span>
           </h2>
@@ -154,15 +154,15 @@ export default function TeamsPage() {
             registeredTeams.map((team) => (
               <div
                 key={team._id}
-                className="flex flex-col gap-4 rounded-lg border border-white/10 bg-[#181818] p-5 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-4 rounded-2xl border border-zinc-200 bg-zinc-50 p-5 sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
                   <div className="flex items-center gap-2">
                     <Badge variant="red">{team.sport}</Badge>
                     <span className="text-xs text-zinc-500">{team.players.length} players</span>
                   </div>
-                  <h3 className="mt-2 text-xl font-semibold text-white">{team.name}</h3>
-                  <p className="mt-1 text-sm text-zinc-500">
+                  <h3 className="mt-2 text-xl font-semibold text-black">{team.name}</h3>
+                  <p className="mt-1 text-sm text-zinc-600">
                     {team.players.slice(0, 4).join(', ')}
                     {team.players.length > 4 ? ` +${team.players.length - 4} more` : ''}
                   </p>
@@ -182,8 +182,8 @@ export default function TeamsPage() {
       </Card>
 
       {editingTeam && (
-        <Card className="border-red-500/30">
-          <h2 className="text-lg font-semibold text-white">Edit squad</h2>
+        <Card className="border-red-200 bg-red-50/40">
+          <h2 className="text-lg font-semibold text-black">Edit squad</h2>
           <form className="mt-6 space-y-5" onSubmit={handleSubmit}>
             <div className="grid gap-5 lg:grid-cols-2">
               <Input label="Squad name" name="name" value={formState.name} onChange={handleChange} required />
@@ -207,10 +207,10 @@ export default function TeamsPage() {
       )}
 
       {registeredTeams.length > 0 && (
-        <div className="rounded-lg border border-red-500/20 bg-red-600/5 p-5 text-center">
-          <p className="text-sm text-zinc-300">
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-5 text-center">
+          <p className="text-sm text-zinc-700">
             Squad ready! Next step:{' '}
-            <a href="/dashboard/events" className="font-semibold text-red-500 hover:text-red-400">
+            <a href="/dashboard/events" className="font-semibold text-red-600 hover:text-red-500">
               Browse events →
             </a>
           </p>

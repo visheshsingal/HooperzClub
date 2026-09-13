@@ -60,10 +60,10 @@ export default function ConnectPage() {
       />
 
       <Card>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-5">
+        <div className="flex flex-col gap-3 border-b border-zinc-200 pb-5 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-white">People near you</h2>
-            <p className="mt-1 text-sm text-zinc-500">
+            <h2 className="text-lg font-semibold text-black">People near you</h2>
+            <p className="mt-1 text-sm text-zinc-600">
               {searchLocation ? `Showing players matching "${searchLocation}"` : 'Showing all available players'}
             </p>
           </div>
@@ -91,7 +91,7 @@ export default function ConnectPage() {
         </div>
 
         {loading ? (
-          <div className="mt-6 rounded-2xl border border-white/10 bg-[#080809] p-6 text-sm text-zinc-500">
+          <div className="mt-6 rounded-2xl border border-zinc-200 bg-zinc-50 p-6 text-sm text-zinc-600">
             Loading nearby players...
           </div>
         ) : nearbyUsers.length === 0 ? (
@@ -104,32 +104,32 @@ export default function ConnectPage() {
         ) : (
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             {nearbyUsers.map((user) => (
-              <div key={user.userId} className="rounded-2xl border border-white/10 bg-[#080809] p-5">
+              <div key={user.userId} className="rounded-2xl border border-zinc-200 bg-zinc-50 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <h3 className="text-lg font-semibold text-white">{user.name}</h3>
-                    <p className="mt-1 text-sm text-zinc-500">{user.profile?.sport || 'Sport not added'}</p>
+                    <h3 className="text-lg font-semibold text-black">{user.name}</h3>
+                    <p className="mt-1 text-sm text-zinc-600">{user.profile?.sport || 'Sport not added'}</p>
                   </div>
                   <Badge variant="red">{user.profile?.location || 'Location not added'}</Badge>
                 </div>
 
-                <p className="mt-3 text-sm leading-relaxed text-zinc-400">
+                <p className="mt-3 text-sm leading-relaxed text-zinc-600">
                   {user.profile?.bio || 'No bio added yet.'}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {user.profile?.whatsapp && (
-                    <button onClick={() => openLink(user.profile.whatsapp)} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-zinc-300 transition hover:border-red-500/40 hover:text-white">
+                    <button onClick={() => openLink(user.profile.whatsapp)} className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-700 transition hover:border-red-300 hover:text-black">
                       WhatsApp
                     </button>
                   )}
                   {user.profile?.instagram && (
-                    <button onClick={() => openLink(user.profile.instagram)} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-zinc-300 transition hover:border-red-500/40 hover:text-white">
+                    <button onClick={() => openLink(user.profile.instagram)} className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-700 transition hover:border-red-300 hover:text-black">
                       Instagram
                     </button>
                   )}
                   {user.profile?.telegram && (
-                    <button onClick={() => openLink(user.profile.telegram)} className="rounded-full border border-white/10 px-3 py-1.5 text-sm text-zinc-300 transition hover:border-red-500/40 hover:text-white">
+                    <button onClick={() => openLink(user.profile.telegram)} className="rounded-full border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-700 transition hover:border-red-300 hover:text-black">
                       Telegram
                     </button>
                   )}
