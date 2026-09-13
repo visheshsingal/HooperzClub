@@ -7,6 +7,7 @@ import AuthCard from '../../components/AuthCard';
 export default function LoginPage() {
   const router = useRouter();
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('hooperz_token');
@@ -100,12 +101,21 @@ export default function LoginPage() {
               </div>
               <div className="space-y-2">
                 <label className="block text-sm font-medium text-black">Password</label>
-                <input
-                  name="password"
-                  type="password"
-                  required
-                  className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/5"
-                />
+                <div className="relative">
+                  <input
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    required
+                    className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 pr-12 text-sm text-black outline-none transition focus:border-black focus:ring-2 focus:ring-black/5"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    className="absolute inset-y-0 right-3 flex items-center text-[10px] font-semibold uppercase tracking-[0.2em] text-black/60"
+                  >
+                    {showPassword ? 'Hide' : 'Show'}
+                  </button>
+                </div>
               </div>
               <p className="text-xs text-black/60">
                 New here? <a href="/signup" className="text-red-600 hover:text-red-500">Create account</a>

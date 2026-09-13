@@ -32,13 +32,18 @@ export async function POST(request) {
     const db = client.db('hooperzclub');
     const users = db.collection('users');
 
-    const user = await users.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase().trim();
+    const user = await users.findOne({ email: normalizedEmail });
     if (!user) {
       return new Response(JSON.stringify({ error: 'Invalid credentials.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
     }
 
     if (user.blocked) {
       return new Response(JSON.stringify({ error: 'This account has been blocked. Contact admin for support.' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
+    }
+
+    if (user.emailVerified === false) {
+      return new Response(JSON.stringify({ error: 'Please verify your email before logging in.' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
     }
 
     const passwordMatch = await bcrypt.compare(password, user.password);

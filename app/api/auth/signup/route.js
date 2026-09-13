@@ -1,6 +1,10 @@
 import bcrypt from 'bcryptjs';
 import clientPromise from '../../../../lib/mongodb.js';
-import { signToken } from '../../../../lib/auth.js';
+import { sendVerificationEmail } from '../../../../lib/mailer.js';
+
+function generateOtp() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
 
 export async function POST(request) {
   try {
@@ -19,20 +23,26 @@ export async function POST(request) {
       });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
     const db = client.db('hooperzclub');
     const users = db.collection('users');
 
-    const existingUser = await users.findOne({ email: email.toLowerCase() });
+    const existingUser = await users.findOne({ email: normalizedEmail });
     if (existingUser) {
       return new Response(JSON.stringify({ error: 'User already exists.' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
     }
 
+    const otp = generateOtp();
     const hashedPassword = await bcrypt.hash(password, 12);
+    const otpHash = await bcrypt.hash(otp, 10);
 
-    const user = await users.insertOne({
+    const result = await users.insertOne({
       name,
-      email: email.toLowerCase(),
+      email: normalizedEmail,
       password: hashedPassword,
+      emailVerified: false,
+      otpHash,
+      otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
       credits: 99,
       blocked: false,
       profileCompleted: false,
@@ -47,14 +57,18 @@ export async function POST(request) {
       createdAt: new Date(),
     });
 
-    const token = signToken({
-      userId: user.insertedId.toString(),
-      email: email.toLowerCase(),
-      name,
-      credits: 99,
-    });
+    try {
+      await sendVerificationEmail(normalizedEmail, otp, name);
+    } catch (mailError) {
+      await users.deleteOne({ _id: result.insertedId });
+      console.error('Signup email verification failed:', mailError);
+      return new Response(JSON.stringify({ error: 'Unable to send verification email. Please try again later.' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
 
-    return new Response(JSON.stringify({ token }), {
+    return new Response(JSON.stringify({ message: 'Verification code sent to your email.', email: normalizedEmail }), {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
     });
