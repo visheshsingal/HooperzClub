@@ -1,10 +1,6 @@
 import bcrypt from 'bcryptjs';
 import clientPromise from '../../../../lib/mongodb.js';
-import { sendVerificationEmail } from '../../../../lib/mailer.js';
-
-function generateOtp() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
+import { signToken } from '../../../../lib/auth.js';
 
 export async function POST(request) {
   try {
@@ -32,17 +28,12 @@ export async function POST(request) {
       return new Response(JSON.stringify({ error: 'User already exists.' }), { status: 409, headers: { 'Content-Type': 'application/json' } });
     }
 
-    const otp = generateOtp();
     const hashedPassword = await bcrypt.hash(password, 12);
-    const otpHash = await bcrypt.hash(otp, 10);
-
-    const result = await users.insertOne({
+    const user = await users.insertOne({
       name,
       email: normalizedEmail,
       password: hashedPassword,
-      emailVerified: false,
-      otpHash,
-      otpExpiresAt: new Date(Date.now() + 10 * 60 * 1000),
+      emailVerified: true,
       credits: 99,
       blocked: false,
       profileCompleted: false,
@@ -57,26 +48,14 @@ export async function POST(request) {
       createdAt: new Date(),
     });
 
-    try {
-      await sendVerificationEmail(normalizedEmail, otp, name);
-    } catch (mailError) {
-      await users.deleteOne({ _id: result.insertedId });
-      const smtpError = mailError?.response || mailError?.message || 'Unknown email error';
-      console.error('Signup email verification failed:', smtpError);
-      return new Response(
-        JSON.stringify({
-          error: process.env.NODE_ENV === 'production'
-            ? 'Unable to send verification email. Please try again later.'
-            : `Email error: ${smtpError}`,
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
-    }
+    const token = signToken({
+      userId: user.insertedId.toString(),
+      email: normalizedEmail,
+      name,
+      credits: 99,
+    });
 
-    return new Response(JSON.stringify({ message: 'Verification code sent to your email.', email: normalizedEmail }), {
+    return new Response(JSON.stringify({ token }), {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
     });
