@@ -61,11 +61,19 @@ export async function POST(request) {
       await sendVerificationEmail(normalizedEmail, otp, name);
     } catch (mailError) {
       await users.deleteOne({ _id: result.insertedId });
-      console.error('Signup email verification failed:', mailError);
-      return new Response(JSON.stringify({ error: 'Unable to send verification email. Please try again later.' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const smtpError = mailError?.response || mailError?.message || 'Unknown email error';
+      console.error('Signup email verification failed:', smtpError);
+      return new Response(
+        JSON.stringify({
+          error: process.env.NODE_ENV === 'production'
+            ? 'Unable to send verification email. Please try again later.'
+            : `Email error: ${smtpError}`,
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     return new Response(JSON.stringify({ message: 'Verification code sent to your email.', email: normalizedEmail }), {
