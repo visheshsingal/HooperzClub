@@ -42,10 +42,6 @@ export async function POST(request) {
       return new Response(JSON.stringify({ error: 'This account has been blocked. Contact admin for support.' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
     }
 
-    if (user.emailVerified === false) {
-      return new Response(JSON.stringify({ error: 'Please verify your email before logging in.' }), { status: 403, headers: { 'Content-Type': 'application/json' } });
-    }
-
     const passwordMatch = await bcrypt.compare(password, user.password);
     if (!passwordMatch) {
       return new Response(JSON.stringify({ error: 'Invalid credentials.' }), { status: 401, headers: { 'Content-Type': 'application/json' } });
