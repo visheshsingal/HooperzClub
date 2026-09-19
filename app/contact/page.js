@@ -6,8 +6,8 @@ export default function ContactPage() {
         <h1 className="mt-4 text-4xl font-black tracking-[-0.08em] md:text-6xl">Let’s build better hoops.</h1>
 
         <div className="mt-8 space-y-4 text-black/70">
-          <p>Email: support@hooperzclub.com</p>
-          <p>Phone: +1 (555) 000-0000</p>
+          <p>Email: thehooperzclub.contact@gmail.com</p>
+          <p>Phone: +91 9816877585</p>
           <p>Location: Built for local basketball communities everywhere.</p>
         </div>
       </div>
